@@ -1,0 +1,20 @@
+function psthMat = psr_psth(varargin)
+%% psr_psth Peri-seizure time histogram
+%
+% INPUTS:
+% % ----------------------Name-Value-Pairs----------------------   %
+%   Name: 'name1'     Value: Description of value including default (default = NaN)
+%   Name: 'name2'     Value: Description of value including default (default = NaN)
+%   Name: 'name3'     Value: Description of value including default (default = NaN)
+% % ------------------------------------------------------------   %
+%
+% OUTPUTS:
+%   psthMat - Firing rate matrix - seizure # x time bins x neuron # 
+%
+% Written by Scott Kilianski
+% Updated on 2023-11-09
+% % ------------------------------------------------------------ %
+
+%% ---- Function Body Here ---- %%%
+
+end % function end

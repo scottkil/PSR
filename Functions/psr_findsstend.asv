@@ -1,0 +1,19 @@
+function [sstend] = psr_findsstend(seizures)
+%% psr_findsstend Finding seizures start and end times
+%
+% INPUTS:
+%   seizures - structure with info about seizures
+%
+% OUTPUTS:
+%   sstend - 2xn matrix with seizure start times in 1st row and end times
+%       in 2nd row (in seconds)
+%
+% Written by Scott Kilianski
+% Updated on 2023-11-09
+% % ------------------------------------------------------------ %
+
+%% ---- Function Body Here ---- %%%
+t1Log = strcmp({seizures.type},'1'); % logical for type 1 seizures only
+seizures
+z = seizures(1).time(seizures(1).trTimeInds);
+end % function end
