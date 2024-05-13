@@ -16,14 +16,9 @@ dsData = fread(FID,[256 tLen],N,BtoSkip);
 fprintf('Reading the file took %.2f seconds\n',toc(readClock));
 timeVec = (0:tLen-1)/100;
 
-%%
-figure;
+%%figure;
 sax(1) = subplot(211);
-plot(timeVec,dsData(43,:));
+plot(dsData(43,:));
 sax(2) = subplot(212);
-plot(timeVec,dsData(243,:));
+plot(dsData(243,:));
 linkaxes(sax,'x')
-
-%%
-figure;
-plot(timeVec,dsData(240,:));

@@ -1,5 +1,5 @@
-function output1 = psr_findSeizBins(varargin)
-%% psr_findSeizBins Template for a custom function
+function output1 = functionTemplate(varargin)
+%% functionTemplate Template for a custom function
 %
 % INPUTS:
 % % ----------------------Name-Value-Pairs----------------------   %
@@ -11,10 +11,9 @@ function output1 = psr_findSeizBins(varargin)
 % OUTPUTS:
 %   output1 - Description of output variable
 %
-% Written by Scott Kilianski
-% Updated on 2023-11-09
-% % ------------------------------------------------------------ %
-
+% Written by Author
+% Updated on YYYY-MM-DD
+% ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 
 end % function end
