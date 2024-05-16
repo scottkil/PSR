@@ -15,7 +15,7 @@ function [nismAN, prefPhase] = psr_spikePolarPlots(szCounts)
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 ntb = size(szCounts{1},2); % number of time bins
-if mod(ntb)
+if mod(ntb,2)
     error(['Number of time bins is odd. It must be even. ' ...
         'Recreate szCounts with even number of time bins'])
 end
