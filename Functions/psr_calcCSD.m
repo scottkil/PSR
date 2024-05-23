@@ -1,9 +1,9 @@
 function [CSDmat, zs] = psr_calcCSD(traces,chDepths)
-%% psr_calcCSD Calculates CSD across provided channels
+%% psr_calcCSD Calculates CSD across vertically aligned, depth-ordered channels
 %
 % INPUTS:
 %   traces - NxT matrix with voltages (in VOLTS). N is # electrodes. T is # samples
-%   chDepths - depths of electrodes, in microns in descending order. chDepth(1) should be >0
+%   chDepths - depths of electrodes (in microns) in descending order. chDepth(1) should be >0
 %
 % OUTPUTS:
 %   CSD - CSD matrix in uA/mm^3 units
@@ -26,7 +26,7 @@ el_pos = chDepths'.*1e-6; % convert microns to meters
 Fcs = F_cubic_spline(el_pos,diam,cond,cond_top);  % make splines
 [zs,CSD_cs] = make_cubic_splines(el_pos,traces,Fcs); % Creates the F matrix of the cubic spline method
 [zs,CSD_cs]=gaussian_filtering(zs,CSD_cs,gauss_sigma,gfilter_range); % gaussian filter the output
-unit_scale = 1e-3; % A/m^3 -> muA/mm^3
+unit_scale = 1e-3; % converts A/m^3 -> uA/mm^3
 CSDmat = CSD_cs*unit_scale;
 
 end % function end
