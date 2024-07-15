@@ -27,7 +27,7 @@ spikeArray = arrayfun(assignSpikes,goodClusts,...
     'UniformOutput',false);                       % 2nd argument 'goodClusts' defines which clusters you want to get spikes from
 
 % try 
-%     TSvec = readNPY('timestamps.npy');
+    % TSvec = readNPY('timestamps.npy');
 % catch
 %     warning('timestamps.npy could not be read or could not be found. Check directory organization to find where timestamps.npy resides');
 % end
