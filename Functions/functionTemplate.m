@@ -1,5 +1,5 @@
 function output1 = functionTemplate(varargin)
-%% functionTemplate Template for a custom function
+%% psr_calculateESA Calculate Entire Spiking Activity (ESA) 
 %
 % INPUTS:
 % % ----------------------Name-Value-Pairs----------------------   %

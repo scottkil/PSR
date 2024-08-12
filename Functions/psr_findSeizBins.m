@@ -12,7 +12,7 @@ function seizBinLog = psr_findSeizBins(timeVec,sstend)
 %
 % Written by Scott Kilianski
 % Updated on 2023-11-09
-% % ------------------------------------------------------------ %
+% ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%
 for szi = 1:size(sstend,1)

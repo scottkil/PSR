@@ -13,7 +13,7 @@ function normMat = psr_psthMat2NormMean(PSTHmat)
 %
 % Written by Scott Kilianski
 % Updated on 2023-11-09
-% % ------------------------------------------------------------ %
+% ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%
 avgMat = mean(PSTHmat,3);       % take average across all events/stimuli/trials/etc
