@@ -11,7 +11,7 @@ function [nismAN, prefPhase] = psr_spikePolarPlots(szCounts)
 %   prefPhase - preferred phase of spiking for all neurons (in degrees, -180 to +180)
 %
 % Written by Scott Kilianski
-% Updated on 2024-05-14
+% Updated on 2024-08-15
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 ntb = size(szCounts{1},2); % number of time bins

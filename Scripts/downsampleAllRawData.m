@@ -1,5 +1,4 @@
 %% Downsample all raw data and save in their home directories as .mat files
-
 dirList{1} = 'Y:\PSR_Data\PSR_15\PSR_15_Rec2_231010_171850';
 dirList{2} = 'Y:\PSR_Data\PSR_17\PSR_17_Rec2_231012_124907';
 dirList{3} = 'Y:\PSR_Data\PSR_21\PSR_21_Rec3_231020_115805';
@@ -15,7 +14,7 @@ dirList{10} ='Y:\PSR_Data\PSR_24\PSR_24_Rec2_231208_162349';
 dsFS = 1000;
 
 %%
-for di = 1:numel(dirList)
+for di = 5:numel(dirList)
     fname = sprintf('%s%s',dirList{di},'\combined.bin');
     psr_downsampleRawData(fname,dsFS)
 end
