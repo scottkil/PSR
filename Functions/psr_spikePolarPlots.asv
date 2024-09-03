@@ -59,7 +59,7 @@ for ni = 1:size(szCounts{1},1)
         title(sprintf('Neuron %d',ni));
         set(gcf().Children,'FontSize',14)
         set(gca,'GridAlpha',0.5,'GridColor',[0 0 0])
-        set(cph,'FaceAlpha',1,'FaceColor',[1 0.345 0],'EdgeAlpha',1,'EdgeColor',[1 0.345 0]);
+        set(cph,'FaceAlpha',1,'FaceColor',[0 144 255],'EdgeA')
     end
 
 end
