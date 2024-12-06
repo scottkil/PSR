@@ -1,4 +1,4 @@
-function [ESA, timevec, convESA] = psr_calculateESA(ds, choi, plotFlag)
+function [ESA, timevec] = psr_calculateESA(ds, choi, plotFlag)
 %% psr_calculateESA Calculate Entire Spiking Activity (ESA) across time (adapted from Drebitz et al. 2019)
 %
 % INPUTS:
@@ -13,51 +13,32 @@ function [ESA, timevec, convESA] = psr_calculateESA(ds, choi, plotFlag)
 %   ESA - Description of output variable
 %
 % Written by Scott Kilianski
-% Updated on 2024-08-12
+% Updated on 2024-12-06
 % ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%
-% --- Parameters for the low-pass filter --- %
-chData = ds.data(choi,:);
-scaleFactor = 0.195; % scale chData to microvolts
-Fs = ds.fs; % Sampling frequency in Hz
-Fpass = 300; % Passband edge frequency in Hz
-Flow = 100;
-% Rp = 0.5; % Maximum passband ripple in dB
-N = 50; % Filter order
-b_low = fir1(N, Fpass/(Fs/2), 'low');
+funClock = tic;                             % start function clock
+chData = ds.data(choi,:);                   % retrieve data
+timevec = (0:size(ds.data,2)-1)./ds.fs;     % make time vector
+scaleFactor = ds.scaleFactor;               % scale to convert chData to microvolts
+[~, b] = psr_makeFIRfilter_300to12500Hz;    % return filter coefficients for 0.3 to 12.5kHz equiripple FIR-filter (assumes 30kHz Fs)
+BPdata = filtfilt(b, 1, double(chData)');   % band-pass-filtered data
+BPD_rect = abs(BPdata);                     % rectify the band-pass-filtered data
 
-% Design the high-pass FIR filter using fir1
-b_high = fir1(N, Fpass/(Fs/2), 'high');
-ts_filtered_high = filtfilt(b_high, 1, double(chData));
-ts_filtered_low = filtfilt(b_low,1,double(chData));
-% Design the low-pass equiripple FIR filter
-% numFreqPoints = 2 * round(Fs / Fpass); % Ensure the number of frequency points is even
-% b = firpm(N, [0, Fpass, Fpass + (Fs / 2)], [1, 1, 0, 0], [10^(Rp/20), 10^(-40/20)], [], numFreqPoints);
-% b = firpm(N, [0, Fpass, Fpass+(Fs/2)], [1, 1, 0, 0], [10^(Rp/20), 10^(-40/20)]);
-% b_low = fir1(N, flow/(Fs/2));
-% b_low = fir1(N, 2/(Fs/2), 'low');
+% -- Prepare Gaussian Kernel for Convolution -- %
+sigma = 0.005;                                                  % sigma value for Gaussian kernel convolution (in seconds)
+num_points = 201*30;                                            % number of samples over which Gaussian will be convolved (201 is 201ms if sampling frequency is 1kHz)
+sigmaSamp = sigma*ds.fs;                                        % desired sigma x sampling rate
+x = linspace(-(num_points-1)/2, (num_points-1)/2, num_points);  % generate the range of x values
+gaussKern = exp(-0.5 * (x / sigmaSamp).^2);                     % compute the Gaussian kernel
+gaussKern = gaussKern / sum(gaussKern);                         % normalize the kernel
 
-%%
-% Apply the low-pass filter to the signal
-% ESA = filtfilt(b_low, 1, abs(ts_filtered_high));
-ESA = abs(ts_filtered_high);
-envSize = 10; % samples?
-ESAenv = envelope(ESA,envSize);
+% -- Apply Convolution to Each Specified Channel -- %
+for si = 1:size(BPD_rect,2)
+    ESA(:,si) = conv(BPD_rect(:,si),gaussKern,'same');
+end
 
-num_points = 201; % number of samples, 201 is 201ms if sampling frequency is 1kHz
-sigma = 0.005; % seconds
-sigmaSamp = sigma*ds.fs; % desired sigma x sampling rate
-x = linspace(-(num_points-1)/2, (num_points-1)/2, num_points); % Generate the range of x values (fixed range)
-gaussKern = exp(-0.5 * (x / sigmaSamp).^2); % Calculate the Gaussian kernel
-gaussKern = gaussKern / sum(gaussKern); % Normalize the kernel
-
-convESA = conv(ESA,gaussKern,'same');
-smoothESA = smoothdata(ESA,1,"movmean",sigmaSamp);
-timevec = (0:size(ds.data,2)-1)./ds.fs;
-
-%%
-% --- Plot original and filtered signals --- %
+%% --- Plot original and filtered signals --- %
 if plotFlag
 
     figure;
@@ -69,17 +50,19 @@ if plotFlag
     
     % figure;
     ax(2) = subplot(3,1,2);
-    plot(timevec,ts_filtered_high,'k');
-    title('High-pass filtered trace');
+    plot(timevec,BPdata,'k');
+    % bar(timevec,ESA,'k','BarWidth',1,'EdgeColor','k');
+    title('Band-pass filtered trace');
     ylabel('Amplitude')
     
     % figure;
     ax(3) = subplot(3,1,3);
-    % barColor = [0.65, 0.65, 0.65];
-    % bar(timevec,abs(ts_filtered_high),...
-    %     'FaceColor',barColor,'EdgeColor',barColor);
+    barColor = [0.65, 0.65, 0.65];
+    bar(timevec,BPD_rect,...
+        'FaceColor',barColor,'EdgeColor',barColor);
+    yyaxis right
     hold on
-        plot(timevec, convESA,...
+        plot(timevec, ESA,...
         'k','LineWidth',1.5);
     hold off
     title('Entire Spiking Activity "ESA"');
@@ -88,5 +71,7 @@ if plotFlag
 
     linkaxes(ax,'x');
 end
+
+fprintf('Computing ESA took %.2f seconds\n',toc(funClock));
 
 end % function end
