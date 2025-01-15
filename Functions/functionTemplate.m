@@ -1,12 +1,8 @@
 function output1 = functionTemplate(varargin)
-%% psr_calculateESA Calculate Entire Spiking Activity (ESA) 
+%% functionTemplate Template for functions 
 %
 % INPUTS:
-% % ----------------------Name-Value-Pairs----------------------   %
-%   Name: 'name1'     Value: Description of value including default (default = NaN)
-%   Name: 'name2'     Value: Description of value including default (default = NaN)
-%   Name: 'name3'     Value: Description of value including default (default = NaN)
-% % ------------------------------------------------------------   %
+%   input1 - Description of input variable
 %
 % OUTPUTS:
 %   output1 - Description of output variable

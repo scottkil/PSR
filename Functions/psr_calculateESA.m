@@ -16,7 +16,7 @@ function [ESA, timevec] = psr_calculateESA(ds, choi, plotFlag)
 % Updated on 2024-12-06
 % ------------------------------------------------------------ %
 
-%% ---- Function Body Here ---- %%
+%% ---- Function Body Below ---- %%
 funClock = tic;                             % start function clock
 chData = ds.data(choi,:);                   % retrieve data
 timevec = (0:size(ds.data,2)-1)./ds.fs;     % make time vector
@@ -48,14 +48,11 @@ if plotFlag
     title('Original Signal');
     ylabel('Amplitude');
     
-    % figure;
     ax(2) = subplot(3,1,2);
     plot(timevec,BPdata,'k');
-    % bar(timevec,ESA,'k','BarWidth',1,'EdgeColor','k');
     title('Band-pass filtered trace');
     ylabel('Amplitude')
     
-    % figure;
     ax(3) = subplot(3,1,3);
     barColor = [0.65, 0.65, 0.65];
     bar(timevec,BPD_rect,...
