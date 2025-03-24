@@ -12,7 +12,7 @@ function psr_eyeImagesToMat
 % % ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%
-dd = uigetdir;
+dd = dir(uigetdir);
 rmLog = strcmp({dd.name},'.') | strcmp({dd.name},'..');
 dd(rmLog) = [];
 topDir = dd(1).folder;
@@ -25,7 +25,7 @@ parfor eyei = 1:numel(sortedFiles)
     eyeIM(:,:,eyei) = imread(fullfile(topDir,sortedFiles{eyei}));
 end
 fprintf('Saving to .mat file...\n')
-save(fullfile(dd,'eyeIM.mat'),'eyeIM','-v7.3');
+save(fullfile(dd(1).folder,'eyeIM.mat'),'eyeIM','-v7.3');
 fprintf('Done!\nReading and writing took %.2f minutes\n', ...
     toc(rwClock)/60);
 
