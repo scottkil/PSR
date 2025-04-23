@@ -64,38 +64,38 @@ for szi = 1:numel(SWD)
 end
 
 %% Plotting
-spacingFactor = 5000; % spacing between plots
-modVec = (0:length(chI)-1).*spacingFactor;
-modMat = repmat(modVec',1,size(filtTraces,2));
+% spacingFactor = 5000; % spacing between plots
+% modVec = (0:length(chI)-1).*spacingFactor;
+% modMat = repmat(modVec',1,size(filtTraces,2));
 % figure; 
-% plot(szTime,modMat-filtTraces,'k-');
+plot(szTime,modMat-filtTraces,'k-');
 % plot(szTime,modMat-smoothTraces,'k');
 % set(gca,'YDir','reverse')
-[~, startI] = min(abs(timeVec-SWD(szi).time(1)));
-[~, endI] = min(abs(timeVec-SWD(szi).time(end)));
-dsIndex = startI:dsFactor:endI;
-szTime = timeVec(dsIndex);
-szData = double(md.Data.ch(chI,dsIndex)); % get LFPs during seizure
-szData = szData.*scaleFactor; % convert data to VOLTS
-szdMed = median(szData,2); % get the median value for each channel
-medMat = repmat(szdMed,1,size(szData,2)); % make a matrix with medians for each trace
-szdNorm = szData-medMat;   % median subtraction
-filtTraces = filtfilt(b,a,szdNorm')';
-[CSDmat, zs] = psr_calcCSD(filtTraces,chDepths);
+% [~, startI] = min(abs(timeVec-SWD(szi).time(1)));
+% [~, endI] = min(abs(timeVec-SWD(szi).time(end)));
+% dsIndex = startI:dsFactor:endI;
+% szTime = timeVec(dsIndex);
+% szData = double(md.Data.ch(chI,dsIndex)); % get LFPs during seizure
+% szData = szData.*scaleFactor; % convert data to VOLTS
+% szdMed = median(szData,2); % get the median value for each channel
+% medMat = repmat(szdMed,1,size(szData,2)); % make a matrix with medians for each trace
+% szdNorm = szData-medMat;   % median subtraction
+% filtTraces = filtfilt(b,a,szdNorm')';
+% [CSDmat, zs] = psr_calcCSD(filtTraces,chDepths);
 
-smoothTraces = smoothdata(filtTraces,1,'movmean',3);
-
-% -- Transform the traces so the fit on the heatmap -- %
-spacingFactor = 1; % spacing between plots
-modVec = (0:length(chI)-1).*spacingFactor;
-modMat = repmat(modVec',1,size(filtTraces,2));
-figure;
-imagesc(szTime,modVec,smoothTraces);
-% clim([-5000 5000]);
-colormap(redblue);
-hold on
-% plot(szTime,modMat-(filtTraces*2), ...
+% smoothTraces = smoothdata(filtTraces,1,'movmean',3);
+%
+% % -- Transform the traces so the fit on the heatmap -- %
+% spacingFactor = 1; % spacing between plots
+% modVec = (0:length(chI)-1).*spacingFactor;
+% modMat = repmat(modVec',1,size(filtTraces,2));
+% figure;
+% imagesc(szTime,modVec,smoothTraces);
+% % clim([-5000 5000]);
+% colormap(redblue);
+% hold on
+% % plot(szTime,modMat-(filtTraces*2), ...
+% %     'k-','LineWidth',1.5);
+% plot(szTime,modMat-(smoothTraces*1), ...
 %     'k-','LineWidth',1.5);
-plot(szTime,modMat-(smoothTraces*1), ...
-    'k-','LineWidth',1.5);
-hold off
+% hold off

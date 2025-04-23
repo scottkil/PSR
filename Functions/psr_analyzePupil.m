@@ -18,6 +18,7 @@ if nargin < 2
 end
 % --- Loading data and setting up analysis parameters --- %
 % pathToFile = 'X:\PSR_Data\PSR_21\PSR_21_Rec3_231020_115805\eyeIM.mat';
+fprintf('Loading eyeIM')
 load(pathToFile, 'eyeIM');
 mThresh = 8;            % image level threshold
 sigma = 0.25;           % for guassian image filtering

@@ -1,11 +1,12 @@
-function spd = psr_computeSpeed(adata,binSize,smoothWin,plotFlag)
+function spd = psr_computeSpeed(adata,binSize,origFS,smoothWin,plotFlag)
 %% psr_computeSpeed Computes speed from rotary encoder data
 %
 % INPUTS:
 %   adata - rotary encoder data (from analog channel)
 %   binSize - time bin size (in seconds). 0.25 seconds default
+%   origFS - original sampling frequency (in Hz). 30kHz default
 %   smoothWin - smoothing window (in seconds). 1 second default
-%   plotFlag - if 1, then plot. If 0, no plots
+%   plotFlag - if 1, then plot. If 0, no plots. 1 is default
 %
 % OUTPUTS:
 %   spd - structure containing the following output variables:
@@ -26,7 +27,10 @@ funClock = tic;
 if ~exist('binSize','var')
     binSize = 0.25; % default
 end
-if ~exist('targetFS','var')
+if ~exist('origFS','var')
+    origFS = 30000;
+end
+if ~exist('smoothWin','var')
     smoothWin = 1; % default
 end
 if ~exist('plotFlag','var')
@@ -34,7 +38,7 @@ if ~exist('plotFlag','var')
 end
 
 % --- Set thresholds and other static values --- %
-FS = 30000;     % sampling frequency of data
+FS = origFS;     % sampling frequency of data
 moveThresh = 2; % threshold for bin to be considered 'moving' (cm/s)
 longThresh = 1; % time threshold for a motionless epoch to be considered actually motionless (in seconds)
 stopThresh = moveThresh; % threshold (cm/s) for finding absolute STOPPING time. If you want a different threshold than moveThresh
@@ -100,7 +104,7 @@ if plotFlag
     xticks([]);
 
     sax(2) = subplot(212);
-    plot(bc,stillLog,'k');
+    plot(bc,~stillLog,'k');
     ylabel('Moving Status')
     xlabel('Time (sec)')
     linkaxes(sax,'x');
