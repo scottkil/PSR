@@ -28,5 +28,6 @@ Fcs = F_cubic_spline(el_pos,diam,cond,cond_top);  % make splines
 [zs,CSD_cs]=gaussian_filtering(zs,CSD_cs,gauss_sigma,gfilter_range); % gaussian filter the output
 unit_scale = 1e-3; % converts A/m^3 -> uA/mm^3
 CSDmat = CSD_cs*unit_scale;
+% zs = zs*1e6; % z positions back to microns
 
 end % function end

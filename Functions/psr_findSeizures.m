@@ -87,7 +87,7 @@ elseif strcmp(fext,'.mat')
 elseif strcmp(fext,'.abf')
     EEG = abfLoadEEG(filename,eegChannel,targetFS);     % loads .abf files
 elseif strcmp(fext,'.bin')
-    EEG = binLoadEEG(filename,targetFS);   % loads .rhd files
+    EEG = psr_binLoadData(filename,eegChannel,targetFS);   % loads .bin files
 else
     error('File type unrecognized. Use .rhd, .adicht, .mat file types only');
 end
