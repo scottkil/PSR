@@ -1,6 +1,6 @@
 %function [amplifier_data, t_amplifier, sample_rate, scaleFactor] = sk_readRHD(filename)
 function intanData = psr_readRHD(filename)
-%% sk_readRHD Reads only the necessary data from RHD files into RAM
+%% psr_readRHD Reads only the necessary data from RHD files into RAM
 % INPUTS:
 %   filename - full file name including path
 % OUTPUTS:
