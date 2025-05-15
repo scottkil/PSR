@@ -22,7 +22,7 @@ chData = ds.data(choi,:);                   % retrieve data
 timevec = (0:size(ds.data,2)-1)./ds.fs;     % make time vector
 scaleFactor = ds.scaleFactor;               % scale to convert chData to microvolts
 [~, b] = psr_makeFIRfilter_300to12500Hz;    % return filter coefficients for 0.3 to 12.5kHz equiripple FIR-filter (assumes 30kHz Fs)
-BPdata = filtfilt(b, 1, double(chData)');   % band-pass-filtered data
+BPdata = filtfilt(b, 1, double(chData)');   % band-pass filter data
 BPD_rect = abs(BPdata);                     % rectify the band-pass-filtered data
 
 % -- Prepare Gaussian Kernel for Convolution -- %

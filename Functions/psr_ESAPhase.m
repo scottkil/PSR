@@ -2,7 +2,7 @@ function [szESA] = psr_ESAPhase(ESA,timevec,seizures)
 %% psr_ESAPhase Quantifies ESA across phases of SWD cycles. 1st bin is start of cycle, last bin is end of cycle
 %
 % INPUTS:
-%   ESA - 
+%   ESA - entire spike activity (ESA)
 %   seizures - seizures structure (output of findSeizures/curateSeizures)
 %
 % OUTPUTS:
@@ -11,7 +11,8 @@ function [szESA] = psr_ESAPhase(ESA,timevec,seizures)
 %
 % Written by Scott Kilianski
 % Updated on 2025-05-05
-% ------------------------------------------------------------ %
+% ------------------------------------------------------------ 
+
 %% ---- Function Body Here ---- %%%
 funClock = tic;
 fprintf('Finding SW phase of ESA...\n')

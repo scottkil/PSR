@@ -10,6 +10,8 @@ function PA = psr_ESA_PAcoupling(szESA,plotFlag)
 %   PA.mvl_norm - mean vector length (normalized [0 min; 1 max])
 %   PA.mi - modulation index [0 min; 1 max]
 %   PA.preferred_phase - phase where ESA is at its peak
+%   PA.P - probability distribution of ESA
+%   PA.bin_centers - phase bin centers for the corresponding probability distribution
 %
 % Learn more about these measures of phase-amplitude coupling from this
 % paper: 
@@ -26,13 +28,12 @@ function PA = psr_ESA_PAcoupling(szESA,plotFlag)
 %% ---- Function Body Here ---- %%
 if ~exist('plotFlag','var')
     plotFlag = 1;
-else
-    plotFlag = 0;
 end
 
 esaTF = cell2mat(szESA')';            % convert ESA to matrix and transpose 
 szESAvec = esaTF(:);                  % linearize it so that all cycles are joined end-to-end
 nbins = size(szESA{1},2);             % calculate the # bins per cycle
+shiftN = round(nbins/2);              % positions to shift vector so 0degrees is negative peak
 repz = size(esaTF,2);                 % calculate how many cycles are in total 
 phaseVec = linspace(-pi,pi,nbins)';   % make corresponding phase vector for 1 cycle (-π to π)  
 phaseESA = repmat(phaseVec,[repz 1]); % repeat it as many times as there are cycles
@@ -47,6 +48,7 @@ PA.preferred_phase = angle(mean_vector);            % in radians, from -π to π
 %% == Compute MI == %%
 edges = linspace(-pi, pi, nbins + 1);               % edges of phase bins
 bin_centers = (edges(1:end-1) + edges(2:end)) / 2;  % centers of phase bins
+bin_centers = circshift(bin_centers,shiftN);        % shifting the bin_centers appropriately
 amp_per_bin = sum(esaTF,2)';                        % amplitude per phase bin
 P = amp_per_bin / sum(amp_per_bin);                 % Normalize to get a probability distribution
 
@@ -56,6 +58,7 @@ H = -sum(P .* log(P));      % compute total information
 Hmax = log(nbins);          % find maximum possible information
 PA.mi = (Hmax - H) / Hmax;  % modulation index (MI)
 PA.P = P;                   % store probability distribution (P) in the output structure
+PA.bin_centers = bin_centers; % stores bin centers for corresponding P
 
 %% Plotting
 if plotFlag
