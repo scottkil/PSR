@@ -25,13 +25,14 @@ savePath = [ephysKilosortPath filesep 'bombcell']; % where you want to save the 
 kilosortVersion = 2; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
 gain_to_uV = 0.195; % use this if you are not using spikeGLX or openEphys to record your data. this value, 
 % when mulitplied by your raw data should convert it to  microvolts. 
-%% Load data
+
+% --- Load data --- %
 % This function loads are your ephys data. Use this function rather than any 
 % custom one as it handles zero-indexed values in a particular way. 
 
 [spikeTimes_samples, spikeClusters, templateWaveforms, templateAmplitudes, pcFeatures, ...
     pcFeatureIdx, channelPositions] = bc.load.loadEphysData(ephysKilosortPath, savePath);
-%% Run quality metrics
+% Run quality metrics
 % Set your paramaters. 
 % These define both how you will run quality metrics and how thresholds will 
 % be applied to quality metrics to classify units into good/MUA/noise/non-axonal. 

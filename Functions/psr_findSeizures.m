@@ -70,7 +70,7 @@ detectionParameters(2,:) = {pband,ptCut,ttv,eegChannel};
 %% Load in data
 fprintf('Loading data...\n')
 if isempty(filename)
-    [fn,fp,rv] = uigetfile({'*.abf;*.mat;*.adicht;*.rhd'});
+    [fn,fp,rv] = uigetfile({'*.abf;*.mat;*.adicht;*.rhd;*.bin'});
     if ~rv % if no file selected, end function early
         return
     else

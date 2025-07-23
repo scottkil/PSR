@@ -1,0 +1,110 @@
+function EEGchangesScratch(dDir)
+%% Low and High band signals relative to seizures
+if ~exist('dDir','var')
+    dDir = uigetdir;
+end
+% Select data and set manual parameters
+preSZwin = 120; % time (seconds) to retrieve before seizure begins
+ampGain = 1000; 
+filename = fullfile(dDir,'analogData.bin'); % analogData.bin file
+dch = 1;
+targetFS = 1000; % Hz
+pblow = [0 39];
+pbhigh = [40 500];
+mtch = regexp(filename,'PSR_\d{2}','match');
+mouseID = mtch(1);
+
+%% Load in the data
+fd = psr_binLoadData(filename,dch,targetFS);
+fd.data = (fd.data/32768 * 10.24)/ ampGain; % conversion to volts
+%%
+fprintf('Calculating spectrogram...\n');
+params.tapers = [2,3];
+params.Fs = targetFS;
+params.fpass = [0 500];
+wsz = 1; % seconds
+wstep = 0.5; % window step (seconds)
+[S,t,f]=mtspecgramc(fd.data',[wsz wstep],params);
+
+%%
+fprintf('Getting bandpower for each seizure...\n');
+
+% --- Load in curated seizures --- %
+dd = dir(dDir);
+fLog = contains({dd.name},'seizures_curated');
+fInd = find(fLog,1,'last');
+ff = fullfile(dDir,dd(fInd).name);
+load(ff,'seizures');
+sz = seizures;
+
+% --- Loop through each seizure and get peri-seizure spectrogram --- %
+dt = diff(t(1:2)); % time step (seconds)
+NC = ceil(preSZwin/dt); % number of columns in matrix
+psztm = nan(numel(f),NC,numel(sz)); % pre-seizure time matrix
+highLog = f>pbhigh(1); % high frequency logical
+lowLog = f<pbhigh(1); % low frequency logical
+for ii = 1:numel(sz)
+    csz = sz(ii); % current seizure
+    startT = csz.time(csz.trTimeInds(1)); % seizure start time
+    [~, t2] = min(abs(t-startT)); % find closest time index in t to startT
+    if startT <= preSZwin
+        t1 = 1; 
+    else
+        t1 = t2-NC+1; 
+    end
+    cspec = S(t1:t2,:)';            % retrieve times leading up to current seizure and transpose
+    blMat = repmat(mean(cspec,2),...
+        1,size(cspec,2));           % generate the baseline matrix
+    normMat = cspec./blMat;         % normalized matrix
+    logMat = log10(normMat);        % log-transformed to decibels
+    sti = NC-size(cspec,2)+1;       % start index
+    psztm(:,sti:NC,ii) = logMat;    % pre-seizure time matrix
+end
+    
+%% 
+meanMat = nanmean(psztm,3);             % mean pre-seizure time matrix
+lowVec = mean(meanMat(lowLog,:),1);     % mean low frequency vector
+highVec = mean(meanMat(highLog,:),1);   % mean high vector
+tv = (0:NC-1)*dt - 120;                 % time vector
+
+%% Plotting section
+cf = figure;
+set(cf,'Position',[680 333 973 545]);
+set(cf, 'PaperOrientation', 'landscape');
+sax = subplot(2,2,1:2);
+imagesc(tv,f,meanMat);
+set(sax,'YDir','normal');
+title(mouseID{1},'Interpreter','none')
+ylabel('Freqency (Hz)')
+xlabel('Time to seizure (sec)')
+subplot(2,2,3);
+plot(tv,lowVec);
+title('0-39Hz')
+xlabel('Time to seizure (sec)')
+ylabel('Power (dB)')
+subplot(2,2,4);
+plot(tv,highVec);
+title('0-39Hz')
+xlabel('Time to seizure (sec)')
+ylabel('Power (dB)')
+
+%% Power spectrum
+% Parameters
+% window = hamming(1024);
+% noverlap = 512;
+% nfft = 1024;
+% 
+% % Compute and plot power spectral density using pwelch
+% [pxx, f] = pwelch(fd.data, window, noverlap, nfft, targetFS);
+% figure;
+% plot(f, 10*log10(pxx))
+% title('Power Spectral Density')
+% xlabel('Frequency (Hz)')
+% ylabel('Power/Frequency (dB/Hz)')
+
+%%
+figName = sprintf('Z:\\PSR_Data\\Random\\EEG_SpectralAnalyses\\%s.pdf',mouseID{1});
+set(gcf, 'PaperPositionMode', 'auto');
+print(gcf, 'myfigure', '-dpdf', '-vector');
+
+end % function end
