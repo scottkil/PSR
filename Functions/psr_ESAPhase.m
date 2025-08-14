@@ -17,9 +17,14 @@ function [szESA] = psr_ESAPhase(ESA,timevec,seizures)
 funClock = tic;
 fprintf('Finding SW phase of ESA...\n')
 nbins = 100; % phase bins
-for szi = 1:numel(seizures)
+numSZ = numel(seizures);
+for szi = 1:numSZ 
+    fprintf('Seizure %d of %d phase ...\n',szi,numSZ)
     sz = seizures(szi); % retrieve current seizure info
     pESA = [];          % intialize current seizure ESA phase matrix ( x time bins)
+    % if szi == 93
+    %     disp(szi);
+    % end
     for cyci = 1:numel(sz.trTimeInds)-1
         cycSE = [sz.time(sz.trTimeInds(cyci)),...
             sz.time(sz.trTimeInds(cyci+1))];        % get the current SW cycle start and end times

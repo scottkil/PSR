@@ -1,4 +1,4 @@
-function EEGchangesScratch(dDir)
+function [meanMat, lowVec, highVec] = EEGchangesScratch(dDir)
 %% Low and High band signals relative to seizures
 if ~exist('dDir','var')
     dDir = uigetdir;
@@ -11,9 +11,11 @@ dch = 1;
 targetFS = 1000; % Hz
 pblow = [0 39];
 pbhigh = [40 500];
-mtch = regexp(filename,'PSR_\d{2}','match');
-mouseID = mtch(1);
-
+% mtch = regexp(filename,'PSR_\d{2}','match');
+% mouseID = mtch(1);
+str = fileparts(dDir);
+idx = find(str == '\', 1, 'last');  % Find last backslash
+mouseID = {str(idx+1:end)};  % Extract everything after it
 %% Load in the data
 fd = psr_binLoadData(filename,dch,targetFS);
 fd.data = (fd.data/32768 * 10.24)/ ampGain; % conversion to volts
