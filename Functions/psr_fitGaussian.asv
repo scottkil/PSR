@@ -22,12 +22,12 @@ plotFlag = 1;
 % dx = xVals(2) - xVals(1);  % Assumes uniform spacing
 % mu_kde = sum(xVals .* fVals) * dx;
 % split_point = mu_kde; % uses KDE-based mean to find center of distribution
-spkc = histcounts(spka,100,'Normalization','probability');
+histcounts(spka,100,'Normalization',''
 figure;
 sax(1) = subplot(211);
-bar(spkc);
+bar(xVals,fVals);
 sax(2) = subplot(212);
-plot(diff(spkc));
+plot(diff(fVals));
 
 % bc = be(1:end-1)+diff(be); % bin centers
 [~, maxI] = max(fVals); % get peak of distribution

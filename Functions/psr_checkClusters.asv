@@ -16,7 +16,7 @@ function clmet = psr_checkClusters(ksdir)
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 FS = 30000;                 % sampling frequency (samples/sec)
-ISIVthresh_sec = 0.0015;    % ISI threshold ( in seconds)
+ISIVthresh_sec = 0.0015;     % ISI threshold ( in seconds)
 binsz = 60;                 % bin size in seconds (for presence ratio)
 minSpikeCountPerBin = 1;    % minimum number of spikes per bin needed (for presence ratio calculation)
 QMfile = fullfile(ksdir,...
@@ -69,7 +69,7 @@ spkCounts = cell2mat(spkCounts);                        % converting spikes-per-
 bins_with_spikes = spkCounts>=minSpikeCountPerBin;      % labeling bins as having enough spikes
 PR = sum(bins_with_spikes,2) ./ numbins;                % presence ratio 
 
-for ni = 1:numel(spka)
+for ni = 1:100%numel(spka)
     fprintf('Unit %d fitting Gaussian...\n',ni-1);
     if ni == 121
         disp('p');
@@ -78,6 +78,7 @@ for ni = 1:numel(spka)
         gfit = psr_fitGaussian(double(spka{ni}));
         PMS(ni,1) = normcdf(min(spka{ni}), gfit.mu, gfit.sig); % proportion of missing spikes
         psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,ni,QMfile); %
+        tsi(ni) = tailSlopeIndex(spka{ni});
     catch
         PMS(ni,1) = NaN;
     end
@@ -129,3 +130,66 @@ exportgraphics(gcf, QMfile,...
 close(gcf);  
 
 end % function end
+
+%% 
+function tsi = tailSlopeIndex(spka)
+% tailSlopeIndex  Compute Tail Slope Index for spike amplitude distribution
+%
+%   tsi = tailSlopeIndex(spka)
+%
+%   spka : vector of spike amplitudes (column or row)
+%   tsi  : Tail Slope Index (slope of log-density just above threshold)
+%
+%   More negative TSI => sharper natural tail
+%   TSI near zero => threshold cutting into bulk
+
+    % Ensure column vector
+    spka = spka(:);
+
+    % Step 1: Infer threshold
+    T = min(spka);
+
+    % Step 2: Choose Δ automatically to get ~200 spikes above threshold
+    sortedAmps = sort(spka);
+    targetCount = 200;
+    if numel(sortedAmps) < targetCount
+        targetCount = numel(sortedAmps);
+    end
+    delta = sortedAmps(targetCount) - T;  % Δ = amplitude span of first N spikes
+
+    % Step 3: Boundary-corrected KDE via reflection
+    % Reflect data below threshold: mirroredPoints = 2*T - spka_belowT
+    belowT = spka(spka < T);
+    mirroredPoints = 2*T - belowT;
+    spka_reflect = [spka; mirroredPoints]; % augmented data for KDE
+
+    % Define evaluation grid in [T, T+Δ]
+    nGrid = 50;
+    evalPoints = linspace(T, T + delta, nGrid);
+
+    % KDE using reflection-augmented data
+    % Use bandwidth = Silverman's rule of thumb
+    bw = 1.06 * std(spka_reflect) * numel(spka_reflect)^(-1/5);
+    [f, xi] = ksdensity(spka_reflect, evalPoints, 'Bandwidth', bw);
+
+    % Step 4: Log-transform density
+    logf = log(f);
+
+    % Step 5: Linear fit to log-density vs amplitude
+    p = polyfit(evalPoints(:), logf(:), 1);
+    slope = p(1);
+
+    % Step 6: Return Tail Slope Index
+    tsi = slope;
+
+    % Optional: plot diagnostic
+    figure;
+    plot(xi, f, 'b-', 'LineWidth', 2); hold on;
+    plot(evalPoints, exp(polyval(p, evalPoints)), 'r--', 'LineWidth', 1.5);
+    xlabel('Amplitude');
+    ylabel('Density');
+    title(sprintf('Tail Slope Index = %.3f', tsi));
+    legend('KDE (reflected)', 'Linear fit in log-domain', 'Location', 'best');
+    grid on;
+
+end
