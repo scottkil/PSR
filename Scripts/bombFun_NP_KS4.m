@@ -1,4 +1,4 @@
-function bombFun(topdir)
+function bombFun_NP_KS4(topdir)
 %% Getting started with bombcell
 %% Set paths
 % Toy dataset location you can play around with. This only has a few units to 
@@ -13,10 +13,10 @@ function bombFun(topdir)
 % will not be computed. 
 
 ephysKilosortPath = topdir;
-toptop = 
+toptop = fileparts(topdir);
 ephysRawFile = fullfile(toptop,'combined.bin'); % path to your raw .bin or .dat data
-% ephysMetaDir = dir([toy_dataset_location '*ap*.*meta']); % path to your .meta or .oebin meta file
-ephysMetaDir = [];
+ephysMetaDir = dir([toptop '/' '*ap*.*meta']); % path to your .meta or .oebin meta file
+% ephysMetaDir = [];
 savePath = [ephysKilosortPath filesep 'bombcell']; % where you want to save the quality metrics 
 %
 % Two parameters to pay attention to: the kilosort version (change to kilosortVersion 
@@ -24,7 +24,7 @@ savePath = [ephysKilosortPath filesep 'bombcell']; % where you want to save the 
 % scaling factor to apply to your data to get it in microVolts).
 
 kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
-gain_to_uV = 0.195; % use this if you are not using spikeGLX or openEphys to record your data. this value, 
+gain_to_uV = NaN; % use this if you are not using spikeGLX or openEphys to record your data. this value, 
 % when mulitplied by your raw data should convert it to  microvolts. 
 
 % --- Load data --- %
@@ -48,8 +48,8 @@ param = bc.qm.qualityParamValues(ephysMetaDir, ephysRawFile, ephysKilosortPath, 
 % typically be either 384 or 385 channels. |param.nSyncChannels| must correspond 
 % to the number of sync channels you recorded. This value is typically 1 or 0.
 
-param.nChannels = 256;
-param.nSyncChannels = 0;
+param.nChannels = 385;
+param.nSyncChannels = 1;
 
 % if using SpikeGLX, you can use this function: 
 if ~isempty(ephysMetaDir)

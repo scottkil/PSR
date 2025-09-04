@@ -24,7 +24,7 @@ timeVec = binEdges(1:end-1)+binSize/2; % time vector. Uses center of time bins
 for ci = 1:numel(spikeArray)
     bstMat(ci,:) = histcounts(spikeArray{ci},binEdges); % binned spike train matrix
 end
-bstMat = bstMat./binSize;
-Q = smoothdata(bstMat,2,'gaussian',smoothWin); % smooth firing rate vector
+bstMat = bstMat./binSize; % dividing binned spike train to generate firing rates (spikes/sec)
+Q = smoothdata(bstMat,2,'gaussian',smoothWin); % smooth firing rate matrix
 fprintf('Making Q matrix took %.2f seconds\n',toc(funClock));
 end % function end

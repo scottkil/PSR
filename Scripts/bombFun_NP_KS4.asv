@@ -1,4 +1,4 @@
-function bombFun(topdir)
+function bombFun_NP_KS4(topdir)
 %% Getting started with bombcell
 %% Set paths
 % Toy dataset location you can play around with. This only has a few units to 
@@ -13,8 +13,7 @@ function bombFun(topdir)
 % will not be computed. 
 
 ephysKilosortPath = topdir;
-toptop = 
-ephysRawFile = fullfile(toptop,'combined.bin'); % path to your raw .bin or .dat data
+ephysRawFile = fullfile(ephysKilosortPath,'combined.bin'); % path to your raw .bin or .dat data
 % ephysMetaDir = dir([toy_dataset_location '*ap*.*meta']); % path to your .meta or .oebin meta file
 ephysMetaDir = [];
 savePath = [ephysKilosortPath filesep 'bombcell']; % where you want to save the quality metrics 

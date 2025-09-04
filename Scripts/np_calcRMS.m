@@ -1,0 +1,74 @@
+function rms = np_calcRMS(filename,BLS) 
+%% np_calcRMS Calculates RMS for Neuropixels AP band data
+%
+% INPUTS:
+%   filename - full file path to Neuropixels AP binary file
+%   BLS (optional) - block length (in seconds). Default is 10
+%
+% OUTPUTS:
+%   rms - structure with following fields:
+%       .vals - RMS values (in uV). [#channels x #bins]
+%       .time - corresponding time vector
+%
+% Written by Scott Kilianski 
+% Updated on 2025-09-03
+% ------------------------------------------------------------ %
+
+% === Handles input and static variables === %
+fs = 30000;                   % Neuropixels AP sampling rate (Hz)
+numChans = 385;   % always 385 channels in neuropixels data
+if nargin < 2 || ~exist('BLS','var'); BLS = 10; end
+
+% === Memory Map Data === %
+d = memmapfile(filename,'Format','int16'); % memory map to load data
+nSamps = numel(d.Data)/numChans;           % divide number of total samples (across all channels) by number of channels to find number of samples
+md = memmapfile(filename,'Format',...
+    {'int16',[numChans,nSamps],'ch'});      % memory map with numChans x nSamps dimensions for easier indexing
+
+% === Calculate scaling factor based on .meta file information === %
+[dd,nn] = fileparts(filename);
+metaFN = sprintf('%s%s%s.meta',dd,filesep,nn);
+metaTBL = readtable(metaFN,'FileType','text');
+mc = table2cell(metaTBL);
+cLog = strcmp(mc(:,1),'imChan0apGain');
+xGain = mc{cLog,2}; % gain
+cLog = strcmp(mc(:,1),'imAiRangeMax');
+vMax = mc{cLog,2}; % gain
+cLog = strcmp(mc(:,1),'imMaxInt');
+Imax = mc{cLog,2};
+scaleFactor = vMax / Imax / xGain * 1e6; % µV/bit for Neuropixels AP
+
+% === Block setup === %
+blockLen = BLS * fs;           
+nBlocks = floor(size(md.Data.ch,2) / blockLen);
+
+% pick all blocks evenly spaced
+nPick = nBlocks; 
+pickIdx = round(linspace(1, nBlocks, nPick)); 
+ranges = arrayfun(@(b) ((b-1)*blockLen+1 : b*blockLen), ...
+    pickIdx, 'uni', 0);
+
+% === Design high-pass Butterworth filter === %
+Fc = 300; % cutoff frequency (Hz)
+[b, a] = butter(3, Fc/(fs/2), 'high'); % high-pass Butterworth filter
+
+% === Calculate RMS in chosen blocks === %
+loopClock = tic;
+for chki = 1:numel(ranges)
+    seg = md.Data.ch(:,ranges{chki}); % raw data chunk
+    BPdata = filtfilt(b,a,double(seg)'*scaleFactor);
+    rmsVals(:,chki) = sqrt(mean(BPdata.^2, 1))'; % RMS per channel
+    loopRead = toc(loopClock);    
+    fprintf('\r%3.2f%% complete, %.2f seconds', ...
+        chki/numel(ranges)*100, loopRead);
+end
+fprintf('\n'); 
+
+% === Organize output and save === %
+timeVec = cellfun(@mean,ranges)/fs; 
+rms.vals = rmsVals;
+rms.time = timeVec;
+datadir = fileparts(filename); 
+save(fullfile(datadir,'rms.mat'),'rms','-v7.3');
+
+end % function end
