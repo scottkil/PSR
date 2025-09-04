@@ -1,0 +1,31 @@
+%%
+cID = 319;
+gwfparams.dataDir = '/media/share2X/ScottTemp/PSR_27_Day1_Rec2/kilosort4/';
+% gwfparams.fileName = 'temp_wh.dat';
+gwfparams.fileName = 'combined.bin';
+gwfparams.dataType = 'int16';
+gwfparams.nCh = 256;
+gwfparams.wfWin = [-40 41];
+
+spikeTimes = readNPY(fullfile(gwfparams.dataDir,'spike_times.npy'));
+spikeClusters = readNPY(fullfile(gwfparams.dataDir,'spike_clusters.npy'));
+
+gwfparams.spikeTimes = spikeTimes(spikeClusters==cID);
+gwfparams.spikeClusters = spikeClusters(spikeClusters==cID);
+gwfparams.nWf = 2000; % get 2000 waveforms (spikes)
+% gwfparams.nWf = sum(spikeClusters==cID); % get all waveforms
+
+
+wf = getWaveForms(gwfparams);
+wfm = squeeze(wf.waveFormsMean);
+[~,maxidx] = max(max(abs(wfm),[],2));
+wfms = squeeze(wf.waveForms(1,:,maxidx,:));
+% figure
+% imagesc(wfm)
+
+%%
+figure;
+hold on
+for ii = 1:50
+    plot(wfms(ii,:)*.195);
+end
