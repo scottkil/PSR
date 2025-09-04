@@ -16,7 +16,7 @@ function clmet = psr_checkClusters(ksdir)
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 FS = 30000;                 % sampling frequency (samples/sec)
-ISIVthresh_sec = 0.0015;     % ISI threshold ( in seconds)
+ISIVthresh_sec = 0.0015;    % ISI threshold ( in seconds)
 binsz = 60;                 % bin size in seconds (for presence ratio)
 minSpikeCountPerBin = 1;    % minimum number of spikes per bin needed (for presence ratio calculation)
 QMfile = fullfile(ksdir,...

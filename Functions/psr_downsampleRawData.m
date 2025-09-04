@@ -39,7 +39,7 @@ fprintf('Reading the file took %.2f seconds\n',toc(readClock));
 ds.data = int16(dsData);
 ds.scaleFactor = scaleFactor;
 ds.fs = originalFS/dsFactor;
-foutName = sprintf('%s%s',dataDir,'\downsampled.mat');
+foutName = sprintf('%s%s',dataDir,'/downsampled.mat');
 save(foutName,'ds','-v7.3');
 
 end % function end
