@@ -1,46 +1,37 @@
-function output1 = psr_applyQM(ksdir,clmet)
-%% psr_applyQM Template for functions 
+function psr_applyQM(ksdir)
+%% psr_applyQM Applies 'good' and 'noise' labels to clusters based on quality metric thresholds 
 %
 % INPUTS:
 %   ksdir - Path to kilosort output directory
-%   clmet - cluster metrics (output from psr_checkClusters())
 %
 % OUTPUTS:
-%   NONE, just rewrites cluster_info.tsv and saves previous version
+%   NONE, just rewrites cluster_group.tsv
 %
 % Written by Scott Kilianski
-% Updated on 2025-06-09
+% Updated on 2025-09-05
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
+load(fullfile(ksdir,'cluster_metrics.mat'),'clmet'); % loading cluster metrics (output from psr_checkClusters())
 
 % -- Setting Thresholds -- %
 cutoffVal = 0.15;           % proportion of spikes missing limit
 RPVthresh = 0.01;           % refractory period violation threshold
 prThresh = 0.9;             % presence ratio threshold
 FRthresh = 0.1;             % firing rate threshold (spikes/sec)
+SNRthresh = 5;              % signal-to-noise threshold
 
 % -- Apply Thresholds -- %
 goodLog = clmet.PMS < cutoffVal & ...
     clmet.ISIV < RPVthresh & ...
     clmet.PR > prThresh & ...
+    clmet.SNR > SNRthresh & ...
     clmet.FR > FRthresh;
-sum(goodLog)
-
-%%
-clmet.unitID;
-
-
-cgFile = fullfile(ksdir,...
-    'cluster_group.tsv');   % cluster group file
-clusttab = readtable(cgFile,...
-    'FileType','text',...
-    'Delimiter', '\t');
-clusttab.label = 'good';
-clusttab.label = 'noise'; 
-
-% WRITE ORIGINAL CLUSTER LABELS TO DIFFERENT FILNAME %
-
-% RELABEL CLUSTERS GOOD OR NOISE %
-% WRITE RELABELED CLUSTERS TO cluster_group.tv %
+labCell = cell(numel(clmet.A),2);
+labCell(:,1) = clmet.unitID;
+labCell(goodLog,2) = {'good'};
+labCell(~goodLog,2) = {'noise'};
+clusttab = cell2table(labCell,"VariableNames",{'cluster_id','group'});
+writetable(clusttab,fullfile(ksdir,'cluster_group.tsv'),...
+    'FileType','text','Delimiter','\t');
 
 end % function end
