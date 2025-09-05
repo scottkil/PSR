@@ -14,7 +14,7 @@ function psr_applyQM(ksdir)
 load(fullfile(ksdir,'cluster_metrics.mat'),'clmet'); % loading cluster metrics (output from psr_checkClusters())
 
 % -- Setting Thresholds -- %
-cutoffVal = 0.15;           % proportion of spikes missing limit
+cutoffVal = 0.1;           % proportion of spikes missing limit
 RPVthresh = 0.01;           % refractory period violation threshold
 prThresh = 0.9;             % presence ratio threshold
 FRthresh = 0.1;             % firing rate threshold (spikes/sec)
@@ -33,5 +33,6 @@ labCell(~goodLog,2) = {'noise'};
 clusttab = cell2table(labCell,"VariableNames",{'cluster_id','group'});
 writetable(clusttab,fullfile(ksdir,'cluster_group.tsv'),...
     'FileType','text','Delimiter','\t');
+fprintf('%d ''good'' units remain after applying quality metric criteria\n',sum(goodLog));
 
 end % function end

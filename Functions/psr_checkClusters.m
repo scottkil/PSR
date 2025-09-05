@@ -57,14 +57,15 @@ tSec = nSamps/FS;           % total recording time (in seconds);
 bedges = 0:binsz:tSec;      % bin edges
 numbins = length(bedges)-1; % # bins
 rmsFile = fullfile(ksdir,'rms.mat');
-ampsFile = fullfile(ksdir,'amplitudes.mat');        %
+ampsFile = fullfile(ksdir,'amplitudes.mat');        % actual spike amplitudes (in uV)
 clustFile = fullfile(ksdir,'spike_clusters.npy');   %
 spktimeFile = fullfile(ksdir,'spike_times.npy');    % spike_times filepath
+tampsFile = fullfile(ksdir,'amplitudes.npy');            % template amplitudes
 load(ampsFile,'ampls');                             % read in subsample of spike times
 load(rmsFile,'rms');                                % pre-calculated RMS for all channels (root mean squared)
 spkclusts = readNPY(clustFile);                     %
 spktimes = double(readNPY(spktimeFile))./FS;        % spike times (timestamps units)
-
+spktamps = double(readNPY(tampsFile));              % read in spike template amplitudes
 
 % === Assigning spike times, amplitues, best channels, RMS, etc === %
 assignTimes = @(X) spktimes(spkclusts==X);  % function to assign spikes to clusters in and output cell array
@@ -72,10 +73,10 @@ spkt = arrayfun(assignTimes,...
     unique(spkclusts),...
     'UniformOutput',false);                 %
 
-% assignAmps = @(X) spkamps(spkclusts==X); % function to assign spikes to clusters in and output cell array
-% spka = arrayfun(assignAmps,unique(spkclusts),...
-%     'UniformOutput',false);
-spka = ampls(:,2);   % spike amplitudes
+assignAmps = @(X) spktamps(spkclusts==X); % function to assign spikes to clusters in and output cell array
+spka = arrayfun(assignAmps,unique(spkclusts),...
+    'UniformOutput',false); % spike template amplitudes
+spkamps = ampls(:,2);   % spike actual amplitudes (microvolts)
 meanRMS = mean(rms.vals,2);                             % mean RMS per channel (microvolts)
 
 isic = cellfun(@diff,spkt,'UniformOutput',false);       % interval spike intervals
@@ -88,7 +89,7 @@ spkCounts = cellfun(@(X) histcounts(X,bedges),...
 spkCounts = cell2mat(spkCounts);                        % converting spikes-per-bin to matrix
 bins_with_spikes = spkCounts>=minSpikeCountPerBin;      % labeling bins as having enough spikes
 PR = sum(bins_with_spikes,2) ./ numbins;                % presence ratio 
-A = cellfun(@mean, spka);                               % mean amplitude (microvolts)
+A = cellfun(@mean, spkamps);                               % mean amplitude (microvolts)
 NZ = meanRMS(bestCH);                                   % mean RMS on each cluster's best channel (noise)
 SNR = A./NZ;                                            % SNR
 BC = bestCH-1;                                          % best channel
