@@ -44,8 +44,10 @@ Fc = 300; % cutoff frequency (Hz)
 loopClock = tic;
 for chki = 1:numel(ranges)
     seg = md.Data.ch(:,ranges{chki}); % get relevant data for current time chunk
-    BPdata = filtfilt(b, a, double(seg)'*scaleFactor);   % band-pass filter data
-    rmsVals(:,chki) = sqrt(mean(BPdata.^2, 1))'; % root mean square calculation
+    BPdata = filtfilt(b, a, double(seg)'*scaleFactor)';   % band-pass filter data
+    avgTrace = mean(BPdata,1); % common average
+    BP_Xcar = BPdata-avgTrace; % CAR applied
+    rmsVals(:,chki) = sqrt(mean(BP_Xcar.^2, 2)); % root mean square calculation
     loopRead = toc(loopClock);    
     fprintf('\r%3.2f%% complete, %.2f seconds', chki/numel(ranges)*100,loopRead);
 end

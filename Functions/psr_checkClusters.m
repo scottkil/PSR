@@ -114,6 +114,8 @@ clmet.A = A;
 clmet.NZ = NZ;
 clmet.SNR = SNR;
 
+save(fullfile(ksdir,'cluster_metrics.mat'),'clmet');
+
 end % function end
 
 
