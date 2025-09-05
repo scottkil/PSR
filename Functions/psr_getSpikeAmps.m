@@ -50,15 +50,16 @@ for ci = 1:numel(cIDlist)
     end
     stss = stcc(randperm(numel(stcc),cnWf)); % get spikes times for current subsample
     badLog = (wfWin(1)+stss) <= 0 | (wfWin(2) + stss) > size(md.Data.ch,2); % if spikes are too close to beginning or end, remove
-    stss(badLog) = []; % remove bad spikes (too close to beginning or end of recording)
-    bMat = baseMat(1:(cnWf-sum(badLog)),:);  % modified base matrix (important for clusters with <nWf spikes) 
+    stss(badLog) = [];                       % remove bad spikes (too close to beginning or end of recording)
+    unWf = sum(~badLog);                     % updated # of waveforms if some are removed
+    bMat = baseMat(1:unWf,:);  % modified base matrix (important for clusters with <nWf spikes) 
     modMat = int64(repmat(stss,1, ...
         size(bMat,2)));                   % spike time matrix to use in indexing below
     indMat = bMat + modMat;               % actual indexing matrix
 
     % === Index to get waveforms on best channel === %
     cwfd = md.Data.ch(bestChan,indMat)'; % pulling waveform data from file
-    cwfd = double(reshape(cwfd,cnWf, ...
+    cwfd = double(reshape(cwfd,unWf, ...
         numel(winVec)))*scaleFactor;     % reshaping it so every row is 1 spike and scaling to uV
     medMat = repmat(median(cwfd,2), ...
         1,numel(winVec));                % matrix for median-subtraction normalization
