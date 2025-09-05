@@ -64,14 +64,13 @@ if plotFlag
     fitted_ls = normpdf(x_vals, mu_ls, sigma_ls);
     cf = figure("Position", [850, 120, 1037, 902],...
         'Visible','off');
-    subplot(1,5, 2:5);
+    subplot(1,3,2:3);
     % plot(x_empirical, f_empirical, 'b-', 'LineWidth', 2, 'DisplayName', 'Kernel Density');
     % histogram(symmetric_data,'Normalization','pdf');
     histogram(spka,'Normalization','pdf')
     hold on;
     plot(x_vals, fitted_ls, 'r--', 'LineWidth', 2, 'DisplayName', 'Fitted Gaussian');
-    legend;
-    title('Fitted Gaussian vs. Actual Data');
+
 end
 
 gfit.mu = mu_ls;

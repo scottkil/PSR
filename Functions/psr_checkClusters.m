@@ -13,6 +13,7 @@ function clmet = psr_checkClusters(ksdir)
 %           A: amplitude of subsample of spikes (in uV)
 %           NZ: average RMS on cluster's best channel (in uV)
 %           SNR: signal-to-noise ratio 
+%           BC: best channel (0-indexed)
 %
 % Written by Scott Kilianski
 % Updated on 2025-09-04
@@ -90,6 +91,7 @@ PR = sum(bins_with_spikes,2) ./ numbins;                % presence ratio
 A = cellfun(@mean, spka);                               % mean amplitude (microvolts)
 NZ = meanRMS(bestCH);                                   % mean RMS on each cluster's best channel (noise)
 SNR = A./NZ;                                            % SNR
+BC = bestCH-1;                                          % best channel
 
 % === Cluster loop for fitting Gaussian === %
 for ni = 1:numel(spka)
@@ -97,7 +99,7 @@ for ni = 1:numel(spka)
     try
         gfit = psr_fitGaussian(double(spka{ni}));
         PMS(ni,1) = normcdf(min(spka{ni}), gfit.mu, gfit.sig); % proportion of missing spikes
-        psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,ni,QMfile); %
+        psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,BC,ni,QMfile); %
     catch
         PMS(ni,1) = NaN;
     end
@@ -113,16 +115,17 @@ clmet.unitID = cIDs;
 clmet.A = A;
 clmet.NZ = NZ;
 clmet.SNR = SNR;
+clmet.BC = BC;
 
 save(fullfile(ksdir,'cluster_metrics.mat'),'clmet');
 
 end % function end
 
 
-function psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,ni,QMfile)
+function psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,BC,ni,QMfile)
 
 % --- Plotting text --- %
-for ti = 1:8
+for ti = 1:9
     switch ti
         case 1
             strng = sprintf('PR: %.3f',PR(ni));
@@ -148,6 +151,9 @@ for ti = 1:8
         case 8
             strng = sprintf('SNR: %.2f',SNR(ni));
             tbpos = [0.1, 0.6, 0.4, 0.05];
+        case 9
+            strng = sprintf('BC: %d',BC(ni));
+            tbpos = [0.1, 0.1, 0.4, 0.05];
     end
 
     annotation('textbox', tbpos, ...  % [x y width height] in normalized units
