@@ -12,7 +12,7 @@ function clmet = psr_checkClusters(ksdir)
 %           FR: firing rate (spks/s) for whole recording
 %           A: amplitude of subsample of spikes (in uV)
 %           NZ: average RMS on cluster's best channel (in uV)
-%           SNR: signal-to-noise ratio 
+%           SNR: signal-to-noise ratio
 %           BC: best channel (0-indexed)
 %
 % Written by Scott Kilianski
@@ -23,8 +23,10 @@ FS = 30000;                 % sampling frequency (samples/sec)
 ISIVthresh_sec = 0.0015;    % ISI threshold ( in seconds)
 binsz = 60;                 % bin size in seconds (for presence ratio)
 minSpikeCountPerBin = 1;    % minimum number of spikes per bin needed (for presence ratio calculation)
+SNRthresh = 2;              % SNR threshold for determining cuttoff for PMS metric
+
 QMfile = fullfile(ksdir,...
-    'QM.pdf');              % quality metrics PDF
+    'QualityMetrics.pdf');              % quality metrics PDF
 if exist(QMfile,'file')
     fprintf('Deleting %s...\n',QMfile)
     delete(QMfile);
@@ -73,10 +75,12 @@ spkt = arrayfun(assignTimes,...
     unique(spkclusts),...
     'UniformOutput',false);                 %
 
-assignAmps = @(X) spktamps(spkclusts==X); % function to assign spikes to clusters in and output cell array
-spka = arrayfun(assignAmps,unique(spkclusts),...
-    'UniformOutput',false); % spike template amplitudes
+% assignAmps = @(X) spktamps(spkclusts==X); % function to assign spikes to clusters in and output cell array
+% spka = arrayfun(assignAmps,unique(spkclusts),...
+%     'UniformOutput',false); % spike template amplitudes
 spkamps = ampls(:,2);   % spike actual amplitudes (microvolts)
+spka = spkamps;         % for legacy purposes
+spkWF = ampls(:,3);     % subsample of spike waveforms
 meanRMS = mean(rms.vals,2);                             % mean RMS per channel (microvolts)
 
 isic = cellfun(@diff,spkt,'UniformOutput',false);       % interval spike intervals
@@ -88,26 +92,36 @@ spkCounts = cellfun(@(X) histcounts(X,bedges),...
     spkt,'UniformOutput',false);                        % number of spikes per bin
 spkCounts = cell2mat(spkCounts);                        % converting spikes-per-bin to matrix
 bins_with_spikes = spkCounts>=minSpikeCountPerBin;      % labeling bins as having enough spikes
-PR = sum(bins_with_spikes,2) ./ numbins;                % presence ratio 
-A = cellfun(@mean, spkamps);                               % mean amplitude (microvolts)
+PR = sum(bins_with_spikes,2) ./ numbins;                % presence ratio
+A = cellfun(@mean, spkamps);                            % mean amplitude (microvolts)
 NZ = meanRMS(bestCH);                                   % mean RMS on each cluster's best channel (noise)
 SNR = A./NZ;                                            % SNR
 BC = bestCH-1;                                          % best channel
 
-% === Cluster loop for fitting Gaussian === %
-for ni = 1:numel(spka)
-    fprintf('Unit %d fitting Gaussian...\n',ni-1);
+% === Loop for fitting Gaussians to each cluster's spike amplitude distribution === %
+parfor ni = 1:numel(spka)
     try
-        gfit = psr_fitGaussian(double(spka{ni}));
-        PMS(ni,1) = normcdf(min(spka{ni}), gfit.mu, gfit.sig); % proportion of missing spikes
-        psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,BC,ni,QMfile); %
+        [gfit, fls(ni)] = psr_fitGaussian(double(spka{ni}));
+        cuttoffVal  = NZ(ni)*SNRthresh; % cuttoff value = noise (RMS) x SNR threshold
+        PMS(ni,1) = normcdf(cuttoffVal, gfit.mu, gfit.sig); % proportion of missing spikes
+        % PMS(ni,1) = normcdf(min(spka{ni}), gfit.mu, gfit.sig); % proportion of missing spikes
     catch
         PMS(ni,1) = NaN;
     end
-    
+
 end
 
-% --- Put everything in output structure --- %
+% === Loop for plotting and appending each cluster's report === &
+cf = figure("Position", [850, 120, 1037, 902],...
+    'Visible','off');
+for ni = 1:numel(spka)
+        fprintf('Unit %d, generating report...\n',cIDs{ni});
+    clf(cf);
+    psr_PlotAndAppend(cf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,BC,ni,QMfile,fls,spka,spkWF,SNRthresh); %
+end
+
+
+% --- Put everything in output structure and save --- %
 clmet.PMS = PMS;
 clmet.PR = PR;
 clmet.ISIV = ISIV;
@@ -117,13 +131,26 @@ clmet.A = A;
 clmet.NZ = NZ;
 clmet.SNR = SNR;
 clmet.BC = BC;
-
-save(fullfile(ksdir,'cluster_metrics.mat'),'clmet');
+save(fullfile(ksdir,'cluster_metrics2.mat'),'clmet');
 
 end % function end
 
 
-function psr_PlotAndAppend(gcf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,BC,ni,QMfile)
+function psr_PlotAndAppend(cf,ISIV,FR,PR,PMS,cIDs,A,NZ,SNR,BC,ni,QMfile,fls,spka,spkWF,SNRthresh)
+
+% --- Plot Spike Amplitude Histogram --- %
+sp1 = subplot(2,3,2:3);
+plot(mean(spkWF{ni},1));
+xlim tight
+title('Mean Waveform');
+sp2 = subplot(2,3,5:6);
+histogram(spka{ni},'Normalization','pdf')
+hold on
+plot(fls(ni).x, fls(ni).y, 'r--', 'LineWidth', 2, 'DisplayName', 'Fitted Gaussian');
+xlim tight
+yl = sp2.YLim;
+plot(ones(2,1).*SNRthresh*NZ(ni),yl,'k--');
+hold off
 
 % --- Plotting text --- %
 for ti = 1:9
@@ -164,10 +191,10 @@ for ti = 1:9
         'FontSize',16);
 end
 
-set(gcf().Children,'FontSize',16);
+set(cf().Children,'FontSize',16);
 drawnow;
-exportgraphics(gcf, QMfile,...
+exportgraphics(cf, QMfile,...
     'Append', true);
-close(gcf);  
+% close(gcf);
 
 end % function end

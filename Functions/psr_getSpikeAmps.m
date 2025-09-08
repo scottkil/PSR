@@ -39,8 +39,8 @@ Fc = 300; % high-pass cutoff frequency (Hz)
 % === Loop through each cluster to get amplitudes === %
 cIDlist = cell2mat(clusterInfo(2:end,1));
 loopClock = tic;
-for ci = 1:numel(cIDlist)
-    fprintf('\rCluster %d of %d...',ci,numel(cIDlist))
+parfor ci = 1:numel(cIDlist)
+    % fprintf('\rCluster %d of %d...',ci,numel(cIDlist))
     cID = cIDlist(ci);                              % current cluster ID
     stcc = spikeTimes(spikeClusters==cID); % spike times for current cluster
     cRow = find(cellfun(@(X) isequal(X,cID),...
@@ -67,12 +67,15 @@ for ci = 1:numel(cIDlist)
     cwfd = double(reshape(cwfd,unWf, ...
         numel(winVec)))*scaleFactor;     % reshaping it so every row is 1 spike and scaling to uV
     BPdata = filtfilt(b, a, cwfd')';     % band-pass filter the waveforms
-    ampls{ci,1} = cID;                   % save cluster ID
-    ampls{ci,2} = abs(min(BPdata,[],2)); % save the minimum value (peak amplitude)
-    ampls{ci,3} = BPdata;                % save the actual waveforms
-    fprintf('%.2f seconds',...
-        toc(loopClock));
+    temp1{ci,1} = cID;                   % save cluster ID
+    temp2{ci,1} = abs(min(BPdata,[],2)); % save the minimum value (peak amplitude)
+    temp3{ci,1} = BPdata;                % save the actual waveforms
+    % fprintf('%.2f seconds',...
+    %     toc(loopClock));
 end
-fprintf('\n'); % go to next line in command window
+
+ampls = cat(2,temp1,temp2,temp3);
+
+fprintf('Loop took %.2f minutes to run\n',toc(loopClock)/60); % go to next line in command window
 save(fullfile(topdir,'amplitudes.mat'),'ampls','-v7.3');
 end % function end

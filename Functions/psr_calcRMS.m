@@ -12,7 +12,7 @@ function rms = psr_calcRMS(filename,numChans,BLS)
 %       .time - corresponding time vector
 %
 % Written by Scott Kilianski
-% Updated on 2025-09-03
+% Updated on 2025-09-08
 % ------------------------------------------------------------ %
 % === Handles input and static variables === %
 fs = 30000;                   % sampling rate (Hz)
@@ -42,16 +42,30 @@ Fc = 300; % cutoff frequency (Hz)
 
 % === Calculate RMS in various time blocks specific above === %
 loopClock = tic;
-for chki = 1:numel(ranges)
-    seg = md.Data.ch(:,ranges{chki}); % get relevant data for current time chunk
-    BPdata = filtfilt(b, a, double(seg)'*scaleFactor)';   % band-pass filter data
-    avgTrace = mean(BPdata,1); % common average
-    BP_Xcar = BPdata-avgTrace; % CAR applied
-    rmsVals(:,chki) = sqrt(mean(BP_Xcar.^2, 2)); % root mean square calculation
-    loopRead = toc(loopClock);    
-    fprintf('\r%3.2f%% complete, %.2f seconds', chki/numel(ranges)*100,loopRead);
+if canUseGPU
+    fprintf('Running on GPU...');
+    parfor chki = 1:numel(ranges)
+        seg = md.Data.ch(:,ranges{chki}); % get relevant data for current time chunk
+        BPdata = filtfilt(b, a, double(seg)'*scaleFactor)';   % band-pass filter data
+        avgTrace = mean(BPdata,1); % common average
+        BP_Xcar = BPdata-avgTrace; % CAR applied
+        rmsVals(:,chki) = sqrt(mean(BP_Xcar.^2, 2)); % root mean square calculation
+    end
+else
+    for chki = 1:numel(ranges)
+        seg = md.Data.ch(:,ranges{chki}); % get relevant data for current time chunk
+        BPdata = filtfilt(b, a, double(seg)'*scaleFactor)';   % band-pass filter data
+        avgTrace = mean(BPdata,1); % common average
+        BP_Xcar = BPdata-avgTrace; % CAR applied
+        rmsVals(:,chki) = sqrt(mean(BP_Xcar.^2, 2)); % root mean square calculation
+        loopRead = toc(loopClock);
+        % fprintf('\r%3.2f%% complete, %.2f seconds', chki/numel(ranges)*100,loopRead);
+
+    end
 end
-fprintf('\n'); % new line after loop printing
+
+fprintf('\nTotal RMS calculation time: %.2f minutes\n',...
+    toc(loopClock)/60);              % new line after loop printing
 timeVec = cellfun(@mean,ranges)/fs;  % time values for all blocks
 
 % === Organize output and save it === %
@@ -61,3 +75,4 @@ datadir = fileparts(filename);
 save(fullfile(datadir,'rms.mat'),'rms','-v7.3');
 
 end % function end
+

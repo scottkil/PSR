@@ -14,14 +14,14 @@ function psr_applyQM(ksdir)
 load(fullfile(ksdir,'cluster_metrics.mat'),'clmet'); % loading cluster metrics (output from psr_checkClusters())
 
 % -- Setting Thresholds -- %
-cutoffVal = 0.1;           % proportion of spikes missing limit
+PMSthresh = 0.1;            % proportion of spikes missing limit
 RPVthresh = 0.01;           % refractory period violation threshold
 prThresh = 0.9;             % presence ratio threshold
 FRthresh = 0.1;             % firing rate threshold (spikes/sec)
 SNRthresh = 5;              % signal-to-noise threshold
 
 % -- Apply Thresholds -- %
-goodLog = clmet.PMS < cutoffVal & ...
+goodLog = clmet.PMS < PMSthresh & ...
     clmet.ISIV < RPVthresh & ...
     clmet.PR > prThresh & ...
     clmet.SNR > SNRthresh & ...
