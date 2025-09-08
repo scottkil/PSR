@@ -16,7 +16,7 @@ function clmet = psr_checkClusters(ksdir)
 %           BC: best channel (0-indexed)
 %
 % Written by Scott Kilianski
-% Updated on 2025-09-04
+% Updated on 2025-09-08
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 FS = 30000;                 % sampling frequency (samples/sec)

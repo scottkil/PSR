@@ -11,7 +11,7 @@ function ampls = psr_getSpikeAmps(topdir,nWf)
 %           This array is also saved in topdir
 %
 % Written by Scott Kilianski
-% Updated on 2025-09-04
+% Updated on 2025-09-08
 % ------------------------------------------------------------ %
 %% Function Body %%
 % === Handle Inputs and Set Static Variables === %
@@ -30,6 +30,11 @@ clusterInfo = readcell(fullfile(topdir,'cluster_info.tsv'), ...
 chCol = find(strcmp(clusterInfo(1,:),'ch'));
 spikeTimes = readNPY(fullfile(topdir,'spike_times.npy')); % load in all spike times
 spikeClusters = readNPY(fullfile(topdir,'spike_clusters.npy'));
+
+% === Set up high-pass filter for filtering spike waveforms === %
+fs = 30000; %
+Fc = 300; % high-pass cutoff frequency (Hz)
+[b, a] = butter(3, Fc/(fs/2), 'high'); % high-pass Butterworth filter
 
 % === Loop through each cluster to get amplitudes === %
 cIDlist = cell2mat(clusterInfo(2:end,1));
@@ -61,12 +66,12 @@ for ci = 1:numel(cIDlist)
     cwfd = md.Data.ch(bestChan,indMat)'; % pulling waveform data from file
     cwfd = double(reshape(cwfd,unWf, ...
         numel(winVec)))*scaleFactor;     % reshaping it so every row is 1 spike and scaling to uV
-    medMat = repmat(median(cwfd,2), ...
-        1,numel(winVec));                % matrix for median-subtraction normalization
-    fnMat = cwfd-medMat;                 % apply that normalization
+    BPdata = filtfilt(b, a, cwfd')';     % band-pass filter the waveforms
     ampls{ci,1} = cID;                   % save cluster ID
-    ampls{ci,2} = abs(min(fnMat,[],2));  % save the minimum value (peak amplitude)
-    fprintf('%.2f seconds',toc(loopClock));
+    ampls{ci,2} = abs(min(BPdata,[],2)); % save the minimum value (peak amplitude)
+    ampls{ci,3} = BPdata;                % save the actual waveforms
+    fprintf('%.2f seconds',...
+        toc(loopClock));
 end
 fprintf('\n'); % go to next line in command window
 save(fullfile(topdir,'amplitudes.mat'),'ampls','-v7.3');

@@ -12,6 +12,7 @@ function psr_prepAndRunQM(ksdir)
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 psr_calcRMS(fullfile(ksdir,'combined.bin'),256);
+psr_getSpikeAmps(ksdir);
 psr_checkClusters(ksdir);
-psr_applyQM;
+psr_applyQM(ksdir);
 end % function end
