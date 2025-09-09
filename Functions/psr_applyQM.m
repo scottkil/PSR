@@ -1,11 +1,14 @@
-function psr_applyQM(ksdir)
+function goodLog = psr_applyQM(ksdir)
 %% psr_applyQM Applies 'good' and 'noise' labels to clusters based on quality metric thresholds 
 %
 % INPUTS:
 %   ksdir - Path to kilosort output directory
 %
 % OUTPUTS:
-%   NONE, just rewrites cluster_group.tsv
+%   goodLog - logical vector. length(goodLog) = # of clusters. 1 is 'good'.
+%   0 is 'noise'
+%
+% Also rewrites cluster_group.tsv inside ksdir
 %
 % Written by Scott Kilianski
 % Updated on 2025-09-05
@@ -17,7 +20,8 @@ load(fullfile(ksdir,'cluster_metrics.mat'),'clmet'); % loading cluster metrics (
 PMSthresh = 0.1;            % proportion of spikes missing limit
 RPVthresh = 0.01;           % refractory period violation threshold
 prThresh = 0.9;             % presence ratio threshold
-FRthresh = 0.1;             % firing rate threshold (spikes/sec)
+% FRthresh = 0.1;             % firing rate threshold (spikes/sec)
+NSthresh = 1000;            % minimum number of spikes
 SNRthresh = 5;              % signal-to-noise threshold
 
 % -- Apply Thresholds -- %
@@ -25,7 +29,7 @@ goodLog = clmet.PMS < PMSthresh & ...
     clmet.ISIV < RPVthresh & ...
     clmet.PR > prThresh & ...
     clmet.SNR > SNRthresh & ...
-    clmet.FR > FRthresh;
+    clmet.NS > NSthresh;
 labCell = cell(numel(clmet.A),2);
 labCell(:,1) = clmet.unitID;
 labCell(goodLog,2) = {'good'};

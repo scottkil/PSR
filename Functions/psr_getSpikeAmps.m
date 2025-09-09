@@ -76,6 +76,7 @@ end
 
 ampls = cat(2,temp1,temp2,temp3);
 
-fprintf('Loop took %.2f minutes to run\n',toc(loopClock)/60); % go to next line in command window
+fprintf('Saving spike amplitudes and waveforms to\n%s\n...\n',fullfile(topdir,'amplitudes.mat')); % go to next line in command window
+fprintf('\n');
 save(fullfile(topdir,'amplitudes.mat'),'ampls','-v7.3');
 end % function end

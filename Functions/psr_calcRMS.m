@@ -37,7 +37,7 @@ ranges = arrayfun(@(b) ((b-1)*blockLen+1 : b*blockLen), ...
 
 % === Set up filter === %
 Fc = 300; % cutoff frequency (Hz)
-[b, a] = butter(3, Fc/(fs/2), 'high'); % high-pass Butterworth filter
+[b, a] = butter(2, Fc/(fs/2), 'high'); % high-pass Butterworth filter
 
 
 % === Calculate RMS in various time blocks specific above === %
