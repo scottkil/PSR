@@ -81,7 +81,7 @@ isic = cellfun(@diff,spkt,'UniformOutput',false);       % interval spike interva
 ISIviol = cellfun(@(X) sum(X<=ISIVthresh_sec),isic);    % ISI violations
 spkcount = cellfun(@numel,spkt);
 FR = spkcount./tSec; % firing rate
-ISIV = ISIviol./spkcount;
+ISIV = ISIviol./(spkcount-1);                           % ISI violation proportion
 spkCounts = cellfun(@(X) histcounts(X,bedges),...
     spkt,'UniformOutput',false);                        % number of spikes per bin
 spkCounts = cell2mat(spkCounts);                        % converting spikes-per-bin to matrix

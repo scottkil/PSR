@@ -19,9 +19,9 @@ load(fullfile(ksdir,'cluster_metrics.mat'),'clmet'); % loading cluster metrics (
 % -- Setting Thresholds -- %
 PMSthresh = 0.1;            % proportion of spikes missing limit
 RPVthresh = 0.01;           % refractory period violation threshold
-prThresh = 0.9;             % presence ratio threshold
+prThresh = 0.5;             % presence ratio threshold
 % FRthresh = 0.1;             % firing rate threshold (spikes/sec)
-NSthresh = 1000;            % minimum number of spikes
+NSthresh = 500;            % minimum number of spikes
 SNRthresh = 5;              % signal-to-noise threshold
 
 % -- Apply Thresholds -- %

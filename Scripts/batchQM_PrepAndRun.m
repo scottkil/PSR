@@ -1,0 +1,44 @@
+%%
+dd{1} = '/media/johnward2X/ScottTemp/PSR_07_Rec2/kilosort4/';
+dd{2} = '/media/johnward2X/ScottTemp/PSR_08_Rec2/kilosort4/';
+dd{3} = '/media/johnward2X/ScottTemp/PSR_09_Rec1_230913_172813/kilosort4/';
+dd{4} = '/media/johnward2X/ScottTemp/PSR_11_Rec3/kilosort4/';
+dd{5} = '/media/johnward2X/ScottTemp/PSR_14_Rec2/kilosort4/';
+dd{6} = '/media/johnward2X/ScottTemp/PSR_15_Rec2/kilosort4/';
+dd{7} = '/media/johnward2X/ScottTemp/PSR_16_Rec2/kilosort4/';
+dd{8} = '/media/johnward2X/ScottTemp/PSR_17_Day1_Rec2/kilosort4/';
+dd{9} = '/media/johnward2X/ScottTemp/PSR_17_Day2_Rec2/kilosort4/';
+dd{10} = '/media/johnward2X/ScottTemp/PSR_18_Rec2/kilosort4/';
+dd{11} = '/media/johnward2X/ScottTemp/PSR_20_Rec2/kilosort4/';
+dd{12} = '/media/johnward2X/ScottTemp/PSR_21_Rec3/kilosort4/';
+dd{13} = '/media/johnward2X/ScottTemp/PSR_22_Rec2/kilosort4/';
+dd{14} = '/media/johnward2X/ScottTemp/PSR_23_Rec2/kilosort4/';
+dd{15} = '/media/johnward2X/ScottTemp/PSR_24_Rec2/kilosort4/';
+dd{16} = '/media/johnward2X/ScottTemp/PSR_25_Rec2_First35min/kilosort4/';
+dd{17} = '/media/johnward2X/ScottTemp/PSR_26_Rec2/kilosort4/';
+dd{18} = '/media/johnward2X/ScottTemp/PSR_27_Day1_Rec2/kilosort4/';
+dd{19} = '/media/johnward2X/ScottTemp/PSR_27_Day2_Rec2/kilosort4/';
+dd{20} = '/media/johnward2X/ScottTemp/PSR_29_Day1_Rec2/kilosort4/';
+dd{21} = '/media/johnward2X/ScottTemp/PSR_29_Day2_Rec2/kilosort4/';
+dd{22} = '/media/johnward2X/ScottTemp/PSR_30_Day1_Rec2/kilosort4/';
+dd{23} = '/media/johnward2X/ScottTemp/PSR_31_Day1_Rec2/kilosort4/';
+dd{24} = '/media/johnward2X/ScottTemp/PSR_31_Day2_Rec1/kilosort4/';
+dd{25} = '/media/johnward2X/ScottTemp/PSR_32_Day2_Rec2/kilosort4/';
+dd{26} = '/media/johnward2X/ScottTemp/PSR_32_Day_Rec11/kilosort4/';
+dd{27} = '/media/johnward2X/ScottTemp/PSR_34_Day1_Rec2/kilosort4/';
+dd{28} = '/media/johnward2X/ScottTemp/PSR_34_Day2_Rec2/kilosort4/';
+% } = '';
+% } = '';
+% } = '';
+% } = '';
+% } = '';
+
+
+gc = nan(numel(dd),1);
+for i = 1:numel(dd)
+    ksdir = dd{i};
+    try 
+        gc(i) = psr_prepAndRunQM(ksdir);
+    catch
+    end
+end

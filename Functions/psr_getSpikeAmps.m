@@ -39,7 +39,7 @@ Fc = 300; % high-pass cutoff frequency (Hz)
 % === Loop through each cluster to get amplitudes === %
 cIDlist = cell2mat(clusterInfo(2:end,1));
 loopClock = tic;
-parfor ci = 1:numel(cIDlist)
+for ci = 1:numel(cIDlist)
     % fprintf('\rCluster %d of %d...',ci,numel(cIDlist))
     cID = cIDlist(ci);                              % current cluster ID
     stcc = spikeTimes(spikeClusters==cID); % spike times for current cluster
@@ -57,6 +57,15 @@ parfor ci = 1:numel(cIDlist)
     badLog = (wfWin(1)+stss) <= 0 | (wfWin(2) + stss) > size(md.Data.ch,2); % if spikes are too close to beginning or end, remove
     stss(badLog) = [];                       % remove bad spikes (too close to beginning or end of recording)
     unWf = sum(~badLog);                     % updated # of waveforms if some are removed
+    
+    % === If cluster has no viable spikes, move to next next === %
+    if ~unWf
+        temp1{ci,1} = cID;                   % save cluster ID
+        temp2{ci,1} = nan; % save the minimum value (peak amplitude)
+        temp3{ci,1} = nan;                % save the actual waveforms
+        continue
+    end
+
     bMat = baseMat(1:unWf,:);  % modified base matrix (important for clusters with <nWf spikes) 
     modMat = int64(repmat(stss,1, ...
         size(bMat,2)));                   % spike time matrix to use in indexing below
