@@ -1,0 +1,38 @@
+%% Get locations of cells
+clear all; close all; clc
+csvin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv','Delimiter',',');
+TDs = csvin.Filepath_SharkShark_; % Extract TDs from the input table
+recnum = csvin.Recording_; % Extract recording number from the input table
+subnum = csvin.Subject_;
+
+%% Loop for each recording
+% How do I handle missing histology??? Skip for now I guess %
+BR = {}; % Initialize BR cell array to store results
+SN = [];
+RN = [];
+
+for ii = 1:numel(TDs)
+    fprintf('Working on PSR_%d...\n',subnum(ii));
+    topdir = TDs{ii};
+    xdir = sprintf('%s%s%s%s',topdir,filesep,'kilosort4',filesep);
+    [spikeArray, neuronChans, clustIDs] = psr_makeSpikeArray(xdir);
+    try
+        load(fullfile(topdir,"electrodeLocations.mat"),'electrodeLocations'); % electrode location list
+        bcind = neuronChans+1; % make it 1-indexed to use with electrodeLocations
+        br = electrodeLocations(bcind,2);
+        mbr{ii} = unique(br);
+    catch
+        fprintf('Electrode locations not found\n');
+        br = num2cell(nan(numel(neuronChans),1));
+        % mbr{ii} = [];
+    end
+    br(:,2) = num2cell(neuronChans);
+    br(:,3) = num2cell(clustIDs);
+    saveName = sprintf('%s%s.mat',topdir,'ClusterLocations');
+    save(saveName,"br",'-v7.3');
+end
+
+
+%%
+% [uniqueBR, ~, uidx] = unique(BRnew);
+% counts = histcounts(uidx, 1:max(uidx)+1)';

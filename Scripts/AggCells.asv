@@ -1,0 +1,22 @@
+%% Get locations of cells
+csvin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv','Delimiter',',');
+TDs = csvin.Filepath_SharkShark_; % Extract TDs from the input table
+recnum = csvin.Recording_; % Extract recording number from the input table
+subnum = csvin.Subject_;
+BR = {}; % Initialize BR cell array to store results
+
+%%
+for ii = 1:numel(TDs)
+    fprintf('Working on ');
+    topdir = TDs{ii};
+    xdir = sprintf('%s%s%s',topdir,filesep,'kilosort4/');
+    [spikeArray, neuronChans] = psr_makeSpikeArray(xdir);
+    load(fullfile(topdir,"electrodeLocations.mat"),'electrodeLocations'); % electrode location list
+    bcind = neuronChans+1; % make it 1-indexed to use with electrodeLocations
+    br = electrodeLocations(bcind,2);
+    sn = ones(numel(br),1) * subnum(ii); % subject number
+    recn = ones(numel(br),1) * recnum(ii); % recording number
+end
+
+%%
+BR = {BR;br};
