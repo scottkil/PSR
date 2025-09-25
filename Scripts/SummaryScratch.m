@@ -1,0 +1,58 @@
+%% Loading in the table with info for all neurons
+ac = readtable('/home/scott/Documents/PSR/Data/AllCellsTable.csv','Delimiter',',');
+simpNames = ac.SimpleName;
+subNum = ac.Subject_;
+recNum = ac.Rec_;
+
+%% Making logical vectors for all structures
+cpLog = strcmp(simpNames,'Caudoputamen''');
+fLog = strcmp(simpNames,'Frontal''');
+ssLog = strcmp(simpNames,'Somatosensory''');
+visLog = strcmp(simpNames,'Visual''');
+hippLog = strcmp(simpNames,'Hipp''');
+
+%% Making recording IDs
+for ii = 1:numel(subNum)
+     tempStr = sprintf('%d.%d',subNum(ii),recNum(ii)); 
+     recID(ii,1) = str2num(tempStr);
+end
+
+recList = unique(recID);
+
+%% Counting neurons, subjects, and recordings per structure
+for ii = 1:5
+    switch ii
+        case  1
+            cLog = ssLog;
+        case  2
+            cLog = visLog;
+        case  3
+            cLog = fLog;
+        case  4
+            cLog = hippLog;
+        case  5
+            cLog = cpLog;
+    end
+    x(1,ii) = sum(cLog);
+    x(3,ii) = length(unique(recID(cLog)));
+    x(2,ii) = length(unique(subNum(cLog)));
+end
+
+%% Counting neurons per layer in cortex
+CL = ac.CorticalLayer;
+zz = [];
+lList = [2,4,5,6,0];
+for ii = 1:3
+    switch ii
+        case 1
+            cLog = ssLog;
+        case 2
+            cLog = visLog;
+        case 3
+            cLog = fLog;
+    end
+    for ill = 1:numel(lList)
+        layerLog = CL==lList(ill) & cLog; % find neurons in current structure and current layer
+        zz(ill,ii) = sum(layerLog); % count neurons that match
+    end
+end

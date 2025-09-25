@@ -14,35 +14,25 @@ RN = [];
 for ii = 1:numel(TDs)
     fprintf('Working on PSR_%d...\n',subnum(ii));
     topdir = TDs{ii};
-    xdir = sprintf('%s%s%s',topdir,filesep,'kilosort4/');
-    [spikeArray, neuronChans] = psr_makeSpikeArray(xdir);
+    xdir = sprintf('%s%s%s%s',topdir,filesep,'kilosort4',filesep);
+    [spikeArray, neuronChans, clustIDs] = psr_makeSpikeArray(xdir);
     try
-        load(fullfile(topdir,"electrodeLocations_ManuallyAdjusted.mat"),'electrodeLocations'); % electrode location list
+        load(fullfile(topdir,"electrodeLocations.mat"),'electrodeLocations'); % electrode location list
         bcind = neuronChans+1; % make it 1-indexed to use with electrodeLocations
         br = electrodeLocations(bcind,2);
         mbr{ii} = unique(br);
     catch
         fprintf('Electrode locations not found\n');
         br = num2cell(nan(numel(neuronChans),1));
-        mbr{ii} = [];
+        % mbr{ii} = [];
     end
-    mn(ii) = subnum(ii);
-    sn = ones(numel(br),1) * subnum(ii); % subject number
-    recn = ones(numel(br),1) * recnum(ii); % recording number
-
-    % --- Add to list --- %
-    BR = [BR;br];
-    RN = [RN;recn];
-    SN = [SN;sn];
-
+    br(:,2) = num2cell(neuronChans);
+    br(:,3) = num2cell(clustIDs);
+    saveName = sprintf('%s%s.mat',topdir,'ClusterLocations');
+    save(saveName,"br",'-v7.3');
 end
 
 
 %%
-% BRnew = BR;
-% nanCell = cellfun(@isnan,BRnew,'UniformOutput',false);
-% nanLog = cellfun(@(X) numel(X)==1 ,nanCell);
-% BRnew(nanLog) = [];
-%
-[uniqueBR, ~, uidx] = unique(BRnew);
-counts = histcounts(uidx, 1:max(uidx)+1)';
+% [uniqueBR, ~, uidx] = unique(BRnew);
+% counts = histcounts(uidx, 1:max(uidx)+1)';
