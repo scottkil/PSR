@@ -1,5 +1,5 @@
-function output1 = functionTemplate(varargin)
-%% functionTemplate Template for functions 
+function output1 = psr_assignColors(varargin)
+%% psr_assignColors Template for functions 
 %
 % INPUTS:
 %   input1 - Description of input variable
