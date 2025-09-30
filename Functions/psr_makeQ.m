@@ -3,7 +3,7 @@ function [Q, timeVec] = psr_makeQ(spikeArray,timeLims, binSize, smoothTime)
 %
 % INPUTS:
 %   spikeArray - cell array with each element being the spike times (in seconds) for one neuron
-%   timeLims - 2-element matrix with start and end times of desired Q matrix (in seconds)
+%   timeLims - 2-column matrix with start and end times of desired Q matrix (in seconds)
 %   binSize - in seconds for binng spike trains
 %   smoothTime - smoothing time window (in seconds)
 %

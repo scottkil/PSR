@@ -2,7 +2,8 @@ function spikeScatter = psr_findSpikes(spikeArray,timeLims)
 %% psr_findSpikes Returns spikes and unit #s within specific time limits
 %
 % INPUTS:
-%   spikeScatter = psr_findSpikes(spikeArray,timeLims);
+%   spikeScatter - cell array 
+%   timeLims - col1 is beginning and col2 is end of time limits (seconds)
 %
 %
 % OUTPUTS:
@@ -10,7 +11,7 @@ function spikeScatter = psr_findSpikes(spikeArray,timeLims)
 %                   Each row is spike. Col1 is spike times (seconds). Col2 is unit #
 %
 % Written by Scott Kilianski
-% Updated on 2023-11-09
+% Updated on 2025-09-29
 % % ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%

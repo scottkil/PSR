@@ -1,5 +1,5 @@
-function seizQ = psr_makeSeizQ(spikeArray, sstend, binSize,buff,smoothTime)
-%% psr_psth Peri-seizure time histogram
+function seizQ = psr_makeSeizQ(spikeArray, sstend, binSize, buff, smoothTime)
+%% psr_makeSeizQ Generate Q matrix (binned firing rate matrix) from times within limits
 %
 % INPUTS:
 %   spikeArray - cell array with each element being the spike times (in seconds) for one neuron
