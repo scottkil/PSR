@@ -1,5 +1,5 @@
-function output1 = psr_meanPWC(PWC)
-%% psr_meanPWC Template for functions 
+function mpwc = psr_meanPWC(PWC)
+%% psr_meanPWC Computes mean pairwise correlations across structure-structure pairs
 %
 % INPUTS:
 %   PWC - a structure with the following fields (output of psr_computePWcorrs):
@@ -8,10 +8,14 @@ function output1 = psr_meanPWC(PWC)
 %             pairNames: cell array with pairs of brain regions for corresponding correlations in the following format:
 %                       BR#1-BR#2 (e.g. 'Caudoputamen-Somatosensory')%
 % OUTPUTS:
-%   output1 - Description of output variable
+%   mpwc - a structure with the following fields:               
+%             swd:  average pairwise correlation during SWD
+%             ctrl: average pairwise correlation during nonSWD (control) epochs
+%             names: cell array with pairs of brain regions for corresponding average correlations in the following format:
+%             np: number of pairs the averages were taken over
 %
-% Written by Author
-% Updated on YYYY-MM-DD
+% Written by Scott Kilianski
+% Updated on 2025-10-01
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 % --- Check for pair name flips and combine as needed --- %
@@ -29,13 +33,14 @@ for pii = 1:(numel(ubps)-1)
 end
 % ------------------------------------------------------- %
 
-[ubps,~,uIDX] = unique(PWC.pairNames);  % unique brain pairs and indices of those
-meanPWC_swd = mean(PWC.swd,1);          % take means across SWDs
-meanPWC_ctrl = mean(PWC.ctrl,1);        % take means across baseline (ctrl) epochs
+[ubps,~,uIDX] = unique(PWC.pairNames);      % unique brain pairs and indices of those
+meanPWC_swd = mean(PWC.swd,1, 'omitnan');   % take means across SWDs
+meanPWC_ctrl = mean(PWC.ctrl,1, 'omitnan'); % take means across baseline (ctrl) epochs
 for uii = 1:numel(ubps) % for every unique structure pair
     cLog = uIDX == uii; % get the pairs with the current structure pair name
-    mpwc.swd(uii,1) = mean(meanPWC_swd(cLog), 'omitnan'); % Calculate mean across matching pairs for SWD
+    mpwc.swd(uii,1) = mean(meanPWC_swd(cLog), 'omitnan');   % Calculate mean across matching pairs for SWD
     mpwc.ctrl(uii,1) = mean(meanPWC_ctrl(cLog), 'omitnan'); % Calculate mean across matching pairs for baseline (ctrl) epochs
+    mpwc.np(uii,1) = sum(cLog); % number of pairs for current structure-structure pair
 end
 mpwc.names = ubps;
 end % function end

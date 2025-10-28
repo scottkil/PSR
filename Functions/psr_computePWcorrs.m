@@ -1,13 +1,16 @@
-function meanPWC = psr_computePWcorrs(tdir)
+function [PWC] = psr_computePWcorrs(tdir,simpName)
 %% psr_computePWcorrs Calculates average pairwise correlations for nonSWD and SWD periods
 %
 % INPUTS:
 %   tdir - top-level directory for recording
+%   simpName - (optional) cell array with names of brain region for each neuron
 %
 % OUTPUTS:
-%   meanPWC - a structure with the following fields:
-%             swd: average pairwise correlations during SWD
-%             ctrl: average pairwose correlations during nonSWD (control) epochs
+%   PWC - a structure with the following fields:
+%             swd:  pairwise correlations during SWD
+%             ctrl:  pairwise correlations during nonSWD (control) epochs
+%             pairNames: cell array with pairs of brain regions for corresponding correlations in the following format:
+%                       BR#1-BR#2 (e.g. 'Caudoputamen-Somatosensory')
 %
 % Written by Scott Kilianski
 % Updated on 2025-09-29
@@ -39,6 +42,19 @@ Q.ctrl = psr_makeSeizQ(spikeArray, ctrl_stend, binSize,buff,smoothTime); % non S
 R.swd = psr_computeRfromQ(Q.swd);    % compute R matrices for SWDs
 R.ctrl = psr_computeRfromQ(Q.ctrl);  % compute R matrices for control epochs
 
+% --- Assign each pair a brain structure - brain structure name --- %
+if exist("simpName",'var')
+    for ii = 1:size(spikeArray,1)
+        iiString = simpName{ii}; % current row string
+        for jj = 1:size(spikeArray,1)
+            jjString = simpName{jj};
+            pairString{ii,jj} = sprintf('%s-%s',iiString,jjString);
+        end
+    end
+else
+    pairString = []; % return empty if simpName is not given
+end
+
 % --- Get unique pairs and average over all epochs --- %
 urLog = logical(triu(ones(numel(spikeArray)),1)); % logical vector for unique pairs
 for szi = 1:numel(R.swd) % for all SWDs
@@ -48,8 +64,9 @@ for ei = 1:numel(R.ctrl) % for nonSWD epochs
     ctrlR(ei,:) = R.ctrl{ei}(urLog); % store unique correlations. Each row is an epoch. Each column is a unique neuron pair
 end
 
-% --- Calculate average correlations for SWDs and control epochs --- %
-meanPWC.swd = mean(swdR, 1,"omitnan"); % average over all SWDs
-meanPWC.ctrl = mean(ctrlR, 1,"omitnan"); % average over all control epochs
+% --- Store in structure for output --- %
+PWC.pairNames = pairString(urLog); 
+PWC.swd = swdR;   % average over all SWDs
+PWC.ctrl = ctrlR; 
 
 end % function end

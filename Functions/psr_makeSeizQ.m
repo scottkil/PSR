@@ -22,7 +22,7 @@ function seizQ = psr_makeSeizQ(spikeArray, sstend, binSize, buff, smoothTime)
 %% ---- Function Body Here ---- %%%
 funClock = tic;
 smoothWin = round(smoothTime/binSize);
-fprintf('Calculating peri-sezure time histograms...\n');
+% fprintf('Calculating peri-sezure time histograms...\n');
 for szi = 1:size(sstend,1)
     binEdges = (sstend(szi,1)-buff):binSize:(sstend(szi,2)+buff);
     bstMat = [];
@@ -33,5 +33,5 @@ for szi = 1:size(sstend,1)
     bstMat = smoothdata(bstMat,2,'gaussian',smoothWin); % smooth firing rate vector
     seizQ{szi,1} = bstMat;
 end
-fprintf('Calculating peri-sezure time histograms took %.2f seconds\n',toc(funClock));
+% fprintf('Calculating peri-sezure time histograms took %.2f seconds\n',toc(funClock));
 end % function end

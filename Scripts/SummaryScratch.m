@@ -5,11 +5,11 @@ subNum = ac.Subject_;
 recNum = ac.Rec_;
 
 %% Making logical vectors for all structures
-cpLog = strcmp(simpNames,'Caudoputamen''');
-fLog = strcmp(simpNames,'Frontal''');
-ssLog = strcmp(simpNames,'Somatosensory''');
-visLog = strcmp(simpNames,'Visual''');
-hippLog = strcmp(simpNames,'Hipp''');
+cpLog = strcmp(simpNames,'Caudoputamen');
+fLog = strcmp(simpNames,'Frontal');
+ssLog = strcmp(simpNames,'Somatosensory');
+visLog = strcmp(simpNames,'Visual');
+hippLog = strcmp(simpNames,'Hipp');
 
 %% Making recording IDs
 for ii = 1:numel(subNum)

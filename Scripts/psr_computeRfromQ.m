@@ -11,7 +11,7 @@ function R = psr_computeRfromQ(Q)
 % Updated on 2025-09-29
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
-fprintf('Computing correlation matrices (Rs)...\n')
+% fprintf('Computing correlation matrices (Rs)...\n')
 for ei = 1:numel(Q)
     cq = Q{ei};            % get current Q matrix
     R{ei,1} = corrcoef(cq');  % compute pairwise correlations
