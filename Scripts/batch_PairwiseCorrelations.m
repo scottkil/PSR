@@ -1,7 +1,6 @@
 %%
 clear all; close all; clc
-dtbl = readtable('/home/scott/Documents/PSR/Data/AllCellsTable.csv',...
-    'Delimiter',',');       % read in data table
+
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
 simpName = dtbl.SimpleName; % get the structure names
