@@ -1,0 +1,32 @@
+%% Excitatory vs. Inhibitory, Firing Rates
+clear all; close all; clc
+dtbl = readtable('/home/scott/Documents/PSR/Data/AllCellsTable.csv',...
+    'Delimiter',',');
+
+
+%%
+simpName = dtbl.SimpleName;
+ubrs = unique(simpName);
+ubrs(strcmp(ubrs,'Excluded')) = []; % remove 'excluded' brain regions
+mva = dtbl.MeanVectorAngle_toFCXEEG_;
+
+mvl = dtbl.MeanVectorLength_toFCXEEG_;
+%%
+for bri = 1:numel(ubrs)
+    stLog = strcmp(simpName,ubrs{bri});
+    % for clii = 0:6 % cortical layer
+    %     clLog = dtbl.CorticalLayer == clii;
+    %     dtbl.nonSWDFR
+    % end
+    inhibLog = dtbl.Inhibitory & stLog;
+    excitLog = ~dtbl.Inhibitory & stLog;
+    MVA{bri,1} = mva(excitLog);
+    MVA{bri,2} = mva(inhibLog);
+    MVL{bri,1} = mvl(excitLog);
+    MVL{bri,2} = mvl(inhibLog);
+
+end
+
+%% Grand totals
+grandTotalExcit = cell2mat(FRdiff(:,1));
+grandTotalInhib = cell2mat(FRdiff(:,2));

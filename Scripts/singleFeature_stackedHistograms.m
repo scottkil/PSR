@@ -9,6 +9,7 @@ ylabel('# Neurons');
 title('Trough-to-peak:  All Neurons, All Mice');
 set(gcf().Children,'FontSize',16)
    exportgraphics(cf1, '/home/scott/Documents/TTP.pdf');
+
 %%
 cf2 = figure; 
 bar(bigCounts.hlfdur_time,bigCounts.hlfdur_vals,'stacked');

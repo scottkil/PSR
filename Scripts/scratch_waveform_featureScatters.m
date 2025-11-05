@@ -7,6 +7,7 @@ recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
 %%
 bigTTP = [];
 bigHLFDUR = [];
+recncell = [];
 for rii = 1:size(recfin,1)
     loopClock = tic;
     fprintf('%% ======= RECORDING %d.%d ======= %%\n',...
@@ -18,13 +19,20 @@ for rii = 1:size(recfin,1)
     for ci = 1:size(meanWFs,1)
         [ttp(ci), hlfdur(ci)] = psr_spikeFeat(meanWFs(ci,:));
     end
-    figure; scatter(hlfdur,ttp,'filled');
-    ylabel('Trough to peak time (ms)')
-    xlabel('Half-amplitude duration (ms)')
-    xlim([0 0.6])
-    ylim([0 1.5])
-    ttlString = sprintf('Recording %d.%d',...
-        recfin.Subject_(rii),recfin.Recording_(rii));
+    recn = sprintf('%d.%d',recfin.Subject_(rii),recfin.Recording_(rii));
+    recn = str2num(recn);
+    recn = repmat(recn,size(meanWFs,1),1);
+    WFN = (1:size(meanWFs,1))';
+    recncell = [recncell; [recn,WFN] ]; 
+    
+    % --- Plot the scatter plot --- %
+    % figure; scatter(hlfdur,ttp,'filled');
+    % ylabel('Trough to peak time (ms)')
+    % xlabel('Half-amplitude duration (ms)')
+    % xlim([0 0.6])
+    % ylim([0 1.5])
+    % ttlString = sprintf('Recording %d.%d',...
+    %     recfin.Subject_(rii),recfin.Recording_(rii));
     bigTTP = [bigTTP; ttp'];
     bigHLFDUR = [bigHLFDUR; hlfdur'];
 
@@ -58,10 +66,15 @@ xlim([0 0.6])
 ylim([0 1.5])
 
 %% === 2D histogram === %
-bEdges = 0:dt:1.5;
-figure; 
-h = histogram2(bigHLFDUR,bigTTP,bEdges,bEdges,'FaceColor','flat','Normalization','probability');
+bEdges = 0:dt_ms:1.5;
+figure;
+cax = axes;
+% h = histogram2(bigHLFDUR,bigTTP,bEdges,bEdges,'FaceColor','flat','Normalization','probability');
+h = histcounts2(bigTTP,bigHLFDUR,bEdges,bEdges,'Normalization','probability');
+bCens = bEdges(2:end) - diff(bEdges(1:2));
+IM = imagesc(bCens,bCens,h);
 xlim([0 0.6])
-ylim([0 1.5])
+ylim([0 1.4])
+set(cax,'YDir','normal');
 ylabel('Trough to peak time (ms)')
 xlabel('Half-amplitude duration (ms)')
