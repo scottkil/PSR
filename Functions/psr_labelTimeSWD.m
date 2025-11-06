@@ -13,8 +13,8 @@ function SWDlabel = psr_labelTimeSWD(topdir, tv)
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%
 % --- Find start and end times of good seizures --- %
-seizFile = fullfile(topdir,'seizures_EEG.mat');         % load in seizure data
-load(seizFile,'seizures');   
+seizFile = fullfile(topdir,'seizures_EEG.mat');       % filepath to seizure data 
+load(seizFile,'seizures');    % load in seizure data
 
 keepLog = strcmp({seizures.type},'1') | strcmp({seizures.type},'2'); % find type 1s and 2s
 seizures(~keepLog) = []; % remove bad "seizures"

@@ -19,7 +19,6 @@ function pp = psr_propPop(topdir,twin,dt)
 % Updated on 2025-11-05
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%
-funClock = tic; % Function Clock start
 % --- Handle Inputs --- %
 if nargin < 2
     twin = 0.025;
@@ -64,28 +63,3 @@ pp.time = BC;
 pp.nn = NN;
 
 end % function end
-
-% -- Plotting proportion active histograms -- %
-% figure;
-% DBwidth = 0.1;  % proportion neurons active (e.g. 0 to 0.1, .1 to .2, etc.)
-% dBE = 0:DBwidth:1;
-% subplot(2,2,2);
-% histogram(ppVec(sti,~SWDlabel),dBE, 'Normalization','probability','FaceColor','k');
-% title('Interictal')
-% subplot(2,2,4);
-% histogram(ppVec(sti,SWDlabel),dBE, 'Normalization','probability','FaceColor','r');
-% title('Ictal')
-% subplot(2,2,[1,3]);
-% [PDF, pB] = histcounts(ppVec(sti,~SWDlabel),dBE,'Normalization','cdf');
-% [probs_nonic, dpB] = histcounts(ppVec(sti,~SWDlabel),dBE,'Normalization','probability');
-% % xsub = 1:(numel(PDF));
-% plot(dBE(1:end-1),PDF,'k');
-% hold on
-% [PDF, pB] = histcounts(ppVec(sti,SWDlabel),dBE,'Normalization','cdf');
-% [probs_ic, dpB] = histcounts(ppVec(sti,SWDlabel),dBE,'Normalization','probability');
-% plot(dBE(1:end-1),PDF,'r');
-% hold off
-% title(brNames{sti});
-% dpBC = dpB(2:end) - dpB(2)/2;
-% bhat_dist(sti) = -log(sum(sqrt(probs_ic.*probs_nonic))); % BHATTACHARYYA DISTANCE
-% end

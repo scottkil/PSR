@@ -1,11 +1,11 @@
-function HSE = psr_findHSE(pp, SWDlabel,minTimeBtwnPeaks)
+function HSE = psr_findHSE(pp, SWDlabel,ptile,minTimeBtwnPeaks)
 %% psr_findHSE Finds HSEs, which are events wherein a large proportion of neurons fire within a brief time window
 %
 % INPUTS:
 %   pp - structure output from psr_propPop
 %   SWDlabel - logical vector the same length as pp.time indicating whether time point was during SWD or not
-%   minTimeBtwnPeaks - minimum time (in seconds) between peaks in pp.vals
-%%%   ptile - percentile threshold value used for finding HSEs
+%   ptile - percentile threshold value used for finding HSEs (proportion of 1). Default is 0.95 (95th percentile)
+%   minTimeBtwnPeaks - minimum time (in seconds) between peaks in pp.vals so peaks too close in time don't get double counted
 %
 % OUTPUTS:
 %   HSE - a structure with the following fields:
@@ -14,50 +14,59 @@ function HSE = psr_findHSE(pp, SWDlabel,minTimeBtwnPeaks)
 % Updated on 2025-11-05
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%
-ptThresh = 0.95; 
+% --- Handle input argument --- %
+if nargin < 3
+    ptile = 0.95; % default percentile score
+    minTimeBtwnPeaks = 0.025; % 25 milliseconds
+elseif nargin < 4
+    minTimeBtwnPeaks = 0.025; % 25 milliseconds
+end
+% ----------------------------- %
+
+% --- Assign values for binning distributions and evaluating kernel density estimates --- %
 DBwidth = 0.05;             % distribution bin width. Units:  proportion neurons active (e.g. 0 to 0.1, .1 to .2, etc.)
 dBE = 0:DBwidth:1;          % distribution bin edges
 BC = dBE(2:end) - DBwidth;  % bin centers
 kdXP = 0:0.01:1;            % kerndel density estimate evaluation points
 dt = pp.time(2)-pp.time(1); %
-minTimeBtwnPeaks
-mtbpNS = ; % minimum time between peaks in # samples units
+mtbpNS = ceil(minTimeBtwnPeaks/dt); % minimum time between peaks in # samples units
+% --------------------------------------------------------------------------------------- %
+
+%% === Main Loop, one iteration per brain structure (numel(pp.sn)) === %
+% 1) Uses KDE to estimate distribution of proportion of neurons active (cumulative distribution functions)
+% 2) Same as 1 but generating probability distribution functions
+% 3) Compute Bhattacharyya coefficient
+% 4) Plot CDFs and 
 for bii = 1:size(pp.vals,1) % one loop iteration for each brain region
     [pks1,loc1] = findpeaks(pp.vals(bii,:),...
-        'MinPeakDistance',minTimeBtwnPeaks); %%% First-pass to find peaks and their indices
+        'MinPeakDistance',mtbpNS); %%% First-pass to find peaks and their indices
 
-    % ----- Use Kernel density estimate to generate distributions ---- %
+    % ---- 1) Use Kernel density estimate to generate distributions ---- %
     modVec = pp.vals(bii,:)+eps; % have to add eps for boundary condition in ksdensity()
-    modVec(modVec>=1) = 1-eps; % have to substract eps from values of 1 to stay within boundary conditions
-    SWDvec = modVec(SWDlabel);
-    baseVec = modVec(~SWDlabel);
+    modVec(modVec>=1) = 1-eps;   % have to substract eps from values of 1 to stay within boundary conditions
+    SWDvec = modVec(SWDlabel);   % SWD bins only 
+    baseVec = modVec(~SWDlabel); % baseline (nonSWD) bins 
     [fi_swd,xi_swd] = ksdensity(SWDvec,kdXP,...
-        'Support',[0,1],'Function','cdf');
+        'Support',[0,1],'Function','cdf'); % KDE of SWD bins
     [fi_base,xi_base] = ksdensity(baseVec,kdXP,...
-        'Support',[0 1],'Function','cdf');
+        'Support',[0 1],'Function','cdf'); % KDE of baseline bins
 
-    % ptCut = prctile(pp.vals(bii,~SWDlabel),99); % 99th percentile cut
-    ptidx = find(fi_base>=ptThresh,1,'first');
+    ptidx = find(fi_base>=ptile,1,'first'); % index to first value of estimated CDF >= percentile
     ptCut = xi_base(ptidx);
     locidx = find(pks1>=ptCut); % find only pks that pass threshold
     LOCS = loc1(locidx); % grab only indices to the peaks that pass threshold
     PKS = pks1(locidx); % grab corresponding peaks
     
 
-    % ---- Probability density functions ------ %
-    % nonSWDdist = histcounts(pp.vals(bii,~SWDlabel),dBE, 'Normalization','probability');
-    % SWDdist = histcounts(pp.vals(bii,SWDlabel),dBE, 'Normalization','probability');
+    % ----- 2) Probability density functions ------ %
         [SWDdist,xi_swd] = ksdensity(SWDvec,kdXP,...
         'Support',[0,1],'Function','pdf');
     [nonSWDdist,xi_base] = ksdensity(baseVec,kdXP,...
         'Support',[0 1],'Function','pdf');
-    % bhat_coeff = sqrt(SWDdist.*nonSWDdist)
+    
+    % ----- 3) Compute Bhattacharyya coeiffi ------ %
     bhat_coeff = trapz(xi_base, sqrt(SWDdist .* nonSWDdist));
-    % bhat_dist = -log(bhat_coeff);
 
-    % --- Make cumulative distribution functions --- %
-    nonSWDcdf = histcounts(pp.vals(bii,~SWDlabel),dBE, 'Normalization','cdf');
-    SWDcdf = histcounts(pp.vals(bii,SWDlabel),dBE, 'Normalization','cdf');
 
     % --------------------------- Plotting --------------------------- %
     % ---- Plot cumulative distributions functions --- %

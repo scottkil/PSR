@@ -4,7 +4,7 @@ recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
 
 twin = 0.025;  % window for HSEs
-dt = 0.001;    % time step for moving sum
+dt = 0.005;    % time step for moving sum
 bigHSE = [];  % Initialize bigHSE if not already done
 for rii = 1:size(recfin,1)
     loopClock = tic;
