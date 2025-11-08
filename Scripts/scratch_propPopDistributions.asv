@@ -1,0 +1,35 @@
+%% === Plot all the distributions together === %%
+indFig = figure;
+meanFig = figure;
+xvec = bigHSE(1).distX; % x vector for distributions (identical for all recordings)
+for ii = 1:2
+    if ii == 1
+        cstr = 'Somatosensory';
+    elseif ii == 2
+        cstr = 'Visual';
+    end
+    cIDX = find(strcmp({bigHSE.name}',cstr));
+    blArr = [];
+    swdArr = [];
+    for rii = 1:length(cIDX)
+        ridx = cIDX(rii); % get current index
+        cbl = bigHSE(ridx).basecdf; % current array for current structure on this iteration
+        cswd = bigHSE(ridx).SWDcdf;
+        blArr = [blArr;cbl];
+        swdArr = [swdArr; cswd];
+    end
+    figure(indFig);
+    subplot(1,2,ii);
+    hold on
+    plot(xvec,blArr,'k');
+    plot(xvec,swdArr,'r');
+    hold off
+    title(cstr);
+
+    figure(meanFig);
+    meanBl = mean(blArr, 1);
+    meanSwd = mean(swdArr, 1);
+    plot(xvec, meanBl, 'k', 'LineWidth', 3);
+    plot(xvec, meanSwd, 'r', 'LineWidth', 3);
+    title(['Mean ' cstr ' Distribution']);
+end

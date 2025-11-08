@@ -7,7 +7,7 @@ twin = 0.025;  % window for HSEs
 dt = 0.005;    % time step for moving sum
 bigHSE = [];  % Initialize bigHSE if not already done
 RN = []; % initialize recording number vector to store recording number ID
-for rii = 1:size(recfin,1)
+for rii = 34%1:size(recfin,1)
     loopClock = tic;
     recNumStr = sprintf('%d.%d',recfin.Subject_(rii),recfin.Recording_(rii));
     recNum = str2num(recNumStr);
@@ -31,7 +31,7 @@ for rii = 1:size(recfin,1)
     rnr = repmat(recNum,numel(pp.sn),1); % recording number repeated as many times as there are structures in each recording
     RN = [RN;rnr]; % recording number
     title(sprintf('Rec# %.1f',recNum));
-    close all
+    % close all
     bigHSE = [bigHSE,HSE];
 end
 
@@ -41,5 +41,5 @@ for rii = 1:numel(bigHSE)
 end
 
 %% Turn it into a data
-HSEtable = struct2table(bigHSE);
-writetable(HSEtable, '/home/scott/Documents/PSR/Data/HSEtable_NoDistributions.csv');
+% HSEtable = struct2table(bigHSE);
+% writetable(HSEtable, '/home/scott/Documents/PSR/Data/HSEtable_NoDistributions.csv');

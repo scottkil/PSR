@@ -1,4 +1,4 @@
-function HSE = psr_findHSE(pp, SWDlabel,ptile,minTimeBtwnPeaks,plotFlag)
+function [HSE, hf] = psr_findHSE(pp, SWDlabel,ptile,minTimeBtwnPeaks,plotFlag)
 %% psr_findHSE Finds HSEs, which are events wherein a large proportion of neurons fire within a brief time window
 %
 % INPUTS:
@@ -15,8 +15,13 @@ function HSE = psr_findHSE(pp, SWDlabel,ptile,minTimeBtwnPeaks,plotFlag)
 %     - ic: rate of HSE during SWD (events/second)
 %     - nn: number of total neurons in brain structure
 %     - diff: difference in rate of HSE between SWD and nonSWD (ic-ni)
-%     - bhat_coeff: Bhattacharyya coefficient of nonSWD and SWD proportion-of-population-active 
-%                   distributions, which are estimated with KDE here
+%     - SWDcdf: SWD cumulative distribution
+%     - basecdf: baseline cumulative distribution 
+%     - xp: x-points for CDFs 
+%
+%   hf - structure to handles of figures from psr_estimatePPdist
+%       Dim1: brain region
+%       Dim2: baseline vs SWD
 %
 % Written by Scott Kilianski
 % Updated on 2025-11-05
@@ -36,73 +41,66 @@ end
 % ----------------------------- %
 
 % --- Assign values for binning distributions and evaluating kernel density estimates --- %
-DBwidth = 0.05;             % distribution bin width. Units:  proportion neurons active (e.g. 0 to 0.1, .1 to .2, etc.)
-dBE = 0:DBwidth:1;          % distribution bin edges
-BC = dBE(2:end) - DBwidth;  % bin centers
-kdXP = 0:0.01:1;            % kerndel density estimate evaluation points
-dt = pp.time(2)-pp.time(1); %
+gridN = 500;                        % evaluation points
+dt = pp.time(2)-pp.time(1);         % time step for propoortion of population vector
 mtbpNS = ceil(minTimeBtwnPeaks/dt); % minimum time between peaks in # samples units
 % --------------------------------------------------------------------------------------- %
 
 %% === Main Loop, one iteration per brain structure (numel(pp.sn)) === %
-% 1) Uses KDE to estimate distribution of proportion of neurons active (cumulative distribution functions)
-% 2) Same as 1 but generating probability distribution functions
-% 3) Compute Bhattacharyya coefficient
-% 4) Plot CDFs and proportion population vectors
-% 5) Calculate HSE rate, etc. and store in output structure
+% 1) Uses makima interpolation to estimate distribution of proportion of neurons active (psr_estimatePPdist())
+% 2) Compute HSE threshold and find HSEs
+% 3) Plot CDFs and proportion population vectors
+% 4) Calculate HSE rate, etc. and store in output structure
 
 for bii = 1:size(pp.vals,1) % one loop iteration for each brain region
-    [pks1,loc1] = findpeaks(pp.vals(bii,:),...
-        'MinPeakDistance',mtbpNS); %%% First-pass to find peaks and their indices
 
-    % ---- 1) Use Kernel density estimate to generate distributions ---- %
-    modVec = pp.vals(bii,:)+eps; % have to add eps for boundary condition in ksdensity()
-    modVec(modVec>=1) = 1-eps;   % have to substract eps from values of 1 to stay within boundary conditions
-    SWDvec = modVec(SWDlabel);   % SWD bins only 
-    baseVec = modVec(~SWDlabel); % baseline (nonSWD) bins 
-    [fi_swd,xi_swd] = ksdensity(SWDvec,kdXP,...
-        'Support',[0,1],'Function','cdf'); % KDE of SWD bins
-    [fi_base,xi_base] = ksdensity(baseVec,kdXP,...
-        'Support',[0 1],'Function','cdf'); % KDE of baseline bins
 
-    ptidx = find(fi_base>=ptile,1,'first'); % index to first value of estimated CDF >= percentile
-    ptCut = xi_base(ptidx);                 % get the actual value at that index
-    locidx = find(pks1>=ptCut);             % find only pks that pass threshold
-    LOCS = loc1(locidx);                    % grab only indices to the peaks that pass threshold
-    PKS = pks1(locidx);                     % grab corresponding peaks
+    % ---- 1) Interpolate over observed values to estimate true distributions ---- %
+    SWDvec = pp.vals(bii,SWDlabel);   % SWD values only
+    [SWDdist, xp, hf(bii,2)] = psr_estimatePPdist(SWDvec,gridN); % do the estimation
+    baseVec = pp.vals(bii,~SWDlabel); % baseline (nonSWD) values
+    [nonSWDdist, xp, hf(bii,1)] = psr_estimatePPdist(baseVec,gridN); % do the estimation
     
+    % Generate cumulative distributions %
+    SWDcdf = cumsum(SWDdist);
+    basecdf = cumsum(nonSWDdist);
+    % ---------------------------------------------------------------------------- %
 
-    % ----- 2) Probability density functions ------ %
-        [SWDdist,xi_swd] = ksdensity(SWDvec,kdXP,...
-        'Support',[0,1],'Function','pdf');
-    [nonSWDdist,xi_base] = ksdensity(baseVec,kdXP,...
-        'Support',[0 1],'Function','pdf');
-    
-    % ----- 3) Compute Bhattacharyya coefficient ------ %
-    bhat_coeff = trapz(xi_base, sqrt(SWDdist .* nonSWDdist));
+    % ---- 2) Compute HSE Threshold and find HSEs ---- %
+    ptidx = find(basecdf>=ptile,1,'first'); % find index of threshold
+    ptCut = xp(ptidx);                      % get actual threshold value
+    [PKS,LOCS] = findpeaks(pp.vals(bii,:),...
+        'MinPeakDistance',mtbpNS,...
+        'MinPeakHeight',ptCut);             % find HSEs 
+    % ------------------------------------------------ %
 
-    % ----------- 4 )Plotting ----------- %
+
+    % calculate different between CDFs (metric of how different they are)
+    DD = sum(abs(SWDcdf-basecdf))./numel(SWDcdf); % distribution distances
+
+    % ----------- 3) Plotting ----------- %
     if plotFlag
         % ---- Plot cumulative distributions functions --- %
         figure;
-        plot(xi_base,fi_base,'k')
+        plot(xp,basecdf,'b','LineWidth',2);
         hold on
-        plot(xi_swd,fi_swd,'r');
+        plot(xp,SWDcdf,'r','LineWidth',2);
         xline(ptCut,'g--');
-        text(.75,.25,sprintf('BC: %.3f',bhat_coeff));
+        text(.75,.25,sprintf('DD: %.3f',DD));
+  
         hold off
         xlim([0 1]);
         ylim([0 1]);
 
         % ---- Plot proportion population vectors --- %
         figure; plot(pp.time,pp.vals(bii,:),'k');
-        hold on; plot(pp.time(SWDlabel),pp.vals(bii,SWDlabel),'r');
-        scatter(pp.time(LOCS),PKS,'bo');
+        hold on; 
+        % h = scatter(pp.time(LOCS),PKS,'bo'); % BE AWARE - doesn't always  display all points because of Matlab 'thinning' on display
         yline(ptCut,'g--');
     end
     % ---------------------------------------------------------------- %
 
-    % ------- 5) Calculate HSE rate, etc. and store in output structure ------- %
+    % ------- 4) Calculate HSE rate, etc. and store in output structure ------- %
     HSElog = false(1,size(pp.vals,2));
     HSElog(LOCS) = true;            % set
     HSEi = sum(HSElog & SWDlabel);   % HSEs during itcal times
@@ -115,10 +113,13 @@ for bii = 1:size(pp.vals,1) % one loop iteration for each brain region
     HSEi_rate = HSEi/Itime;
     fprintf('HSE difference: %.3f\n', HSEi_rate-HSEni_rate);
     fprintf('--------------------\n');
-    HSE(bii).name = pp.sn{bii};
-    HSE(bii).ni = HSEni_rate;
-    HSE(bii).ic = HSEi_rate;
-    HSE(bii).nn = pp.nn(bii);
-    HSE(bii).diff = HSEi_rate-HSEni_rate;
-    HSE(bii).bhat_coeff = bhat_coeff;
+    HSE(bii).name = pp.sn{bii}; % structure name
+    HSE(bii).ni = HSEni_rate; % HSE baseline (non-ictal) rate
+    HSE(bii).ic = HSEi_rate;  % HSE SWD rate (ictal)
+    HSE(bii).nn = pp.nn(bii); % number of neurons per structure
+    HSE(bii).diff = HSEi_rate-HSEni_rate; % different between baseline and SWD HSE rate
+    HSE(bii).SWDcdf = SWDcdf; % SWD CDF
+    HSE(bii).basecdf = basecdf; % baseline CDF
+    HSE(bii).distX = xp; % x-points for CDFs
+    HSE(bii).DD = DD; % distribution differences
 end
