@@ -1,6 +1,8 @@
 %%
 clear all; close all; clc
-
+%%
+dtbl = readtable('/home/scott/Documents/PSR/Data/AllCellsTable.csv',...
+    'Delimiter',',');
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
 simpName = dtbl.SimpleName; % get the structure names
@@ -37,4 +39,4 @@ end
 [upns,~,G] = unique(bigArray(:,2));
 mc_baseline = cell2num(bigArray(:,4));
 mc_swd = cell2num(bigArray(:,5));
-Y = splitapply(@)
+% Y = splitapply(@)

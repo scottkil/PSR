@@ -1,12 +1,9 @@
-function output1 = psr_meanPWC(PWC)
-%% psr_meanPWC Template for functions 
+function output1 = functionTemplate(input1)
+%% functionTemplate Template for functions 
 %
 % INPUTS:
-%   PWC - a structure with the following fields (output of psr_computePWcorrs):
-%             swd:  pairwise correlations during SWD
-%             ctrl:  pairwise correlations during nonSWD (control) epochs
-%             pairNames: cell array with pairs of brain regions for corresponding correlations in the following format:
-%                       BR#1-BR#2 (e.g. 'Caudoputamen-Somatosensory')%
+%   intpu1 - Description of input variable
+%
 % OUTPUTS:
 %   output1 - Description of output variable
 %
@@ -14,28 +11,5 @@ function output1 = psr_meanPWC(PWC)
 % Updated on YYYY-MM-DD
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
-% --- Check for pair name flips and combine as needed --- %
-[ubps] = unique(PWC.pairNames); % unique brain pairs
-for pii = 1:(numel(ubps)-1)
-    truePair = ubps{pii};               % get current pair names to inspect
-    tmpc = split(truePair,'-');         % split the brain regions
-    flippedPair = sprintf('%s-%s',...
-        tmpc{2},tmpc{1});               % create the flipped version
-    ptfLog = strcmp(flippedPair,PWC.pairNames);
-    ptfIDX = find(ptfLog);
-    for idxi = 1:numel(ptfIDX)
-        PWC.pairNames{ptfIDX(idxi)} = truePair;
-    end
-end
-% ------------------------------------------------------- %
 
-[ubps,~,uIDX] = unique(PWC.pairNames);  % unique brain pairs and indices of those
-meanPWC_swd = mean(PWC.swd,1);          % take means across SWDs
-meanPWC_ctrl = mean(PWC.ctrl,1);        % take means across baseline (ctrl) epochs
-for uii = 1:numel(ubps) % for every unique structure pair
-    cLog = uIDX == uii; % get the pairs with the current structure pair name
-    mpwc.swd(uii,1) = mean(meanPWC_swd(cLog), 'omitnan'); % Calculate mean across matching pairs for SWD
-    mpwc.ctrl(uii,1) = mean(meanPWC_ctrl(cLog), 'omitnan'); % Calculate mean across matching pairs for baseline (ctrl) epochs
-end
-mpwc.names = ubps;
 end % function end

@@ -18,7 +18,7 @@ if nargin < 2
 end
 % --- Loading data and setting up analysis parameters --- %
 % pathToFile = 'X:\PSR_Data\PSR_21\PSR_21_Rec3_231020_115805\eyeIM.mat';
-fprintf('Loading eyeIM')
+fprintf('Loading eyeIM\n')
 load(pathToFile, 'eyeIM');
 mThresh = 8;            % image level threshold
 sigma = 0.25;           % for guassian image filtering
@@ -118,5 +118,5 @@ function BWen = processEyeImage(eyeFrame,sigma,se,imMask,mThresh)
     enIm = enIm .*imMask;                       % apply user-defined mask
     thresh = multithresh(enIm,mThresh);         % apply levels threshold
     labels = imquantize(enIm,thresh);           % quantized based on threshold
-    BWen = imbinarize(labels,mThresh-1);        % binarize for circle-finding below
+    BWen = imbinarize(labels,mThresh);          % binarize for circle-finding below
 end
