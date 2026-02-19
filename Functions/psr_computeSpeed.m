@@ -1,4 +1,4 @@
-function spd = psr_computeSpeed(adata,binSize,origFS,smoothWin,plotFlag)
+function spd = psr_computeSpeed(adata,binSize,origFS,smoothWin,moveThresh,plotFlag)
 %% psr_computeSpeed Computes speed from rotary encoder data
 %
 % INPUTS:
@@ -6,6 +6,7 @@ function spd = psr_computeSpeed(adata,binSize,origFS,smoothWin,plotFlag)
 %   binSize - time bin size (in seconds). 0.25 seconds default
 %   origFS - original sampling frequency (in Hz). 30kHz default
 %   smoothWin - smoothing window (in seconds). 1 second default
+%   moveThresh - movement threshold for finding still periods
 %   plotFlag - if 1, then plot. If 0, no plots. 1 is default
 %
 % OUTPUTS:
@@ -33,13 +34,15 @@ end
 if ~exist('smoothWin','var')
     smoothWin = 1; % default
 end
+if ~exist('moveThresh','var')
+    moveThresh = 1; % default 
+end
 if ~exist('plotFlag','var')
     plotFlag = 1; % default
 end
 
 % --- Set thresholds and other static values --- %
 FS = origFS;     % sampling frequency of data
-moveThresh = 2; % threshold for bin to be considered 'moving' (cm/s)
 longThresh = 1; % time threshold for a motionless epoch to be considered actually motionless (in seconds)
 stopThresh = moveThresh; % threshold (cm/s) for finding absolute STOPPING time. If you want a different threshold than moveThresh
 smws = round(smoothWin/binSize); % smoothing window size (in samples)
@@ -60,15 +63,30 @@ spd_smoothed = smoothdata(spdVec,...
 moveLog = spd_smoothed>moveThresh;
 startInds = find(diff(moveLog)==1)+1; % indices to movement starting
 stopInds = find(diff(moveLog)==-1)+1; % indices to movement ending
-if startInds(1)>stopInds(1)
-    stopInds(1) = [];
+if startInds(1)>stopInds(1) % if recording STARTS in movement (i.e. a 'stop' is detected first), set the very first sample as 'start' point
+    startInds = [1,startInds];
+    firstStopFlag = 0;
+else 
+    firstStopFlag = 1; % indicates that recording starts in stillness
 end
-if startInds(end)>stopInds(end)
-    startInds(end) = [];
+
+if startInds(end)>stopInds(end) % if recording ends in movement, add the final sample as the final stopping point
+    stopInds(end+1) = numel(moveLog); 
+    endStopFlag = 0;
+else
+    endStopFlag = 1; % indicates that recording ends in stillness
+end
+
+% --- Accounting for situations starting or ending the recording in stillness --- %
+stillInds = [stopInds(1:end-1);startInds(2:end)]';      % get start and end indices of the motionless epochs
+if firstStopFlag
+    stillInds = [1,startInds(1);stillInds]; % sets first interval to 'still'
+end
+if endStopFlag % 
+    stillInds(end+1,:) = [stopInds(end), numel(moveLog)]; % sets very last interval to 'still' 
 end
 
 % --- Check if the stopped times are sufficiently long --- %
-stillInds = [stopInds(1:end-1);startInds(2:end)]';      % get start and end indices of the motionless epochs
 still_epochs_dur = diff(stillInds,[],2) * binSize;      % calculating durations of motionless epochs
 longLog = still_epochs_dur>longThresh;                  % find motionless epochs longer than longThresh
 stillInds =stillInds(longLog,:);                        % only keep those epochs that are sufficiently long
@@ -79,7 +97,7 @@ stillLog = false(size(spd_smoothed));
 % --- Find the precise stopping time of each motionless epoch --- %
 for eii = 1:size(stillInds,1)        
     tRange = stillInds(eii,1):stillInds(eii,2);
-    [~, tInd] = find(spd_smoothed(tRange)<stopThresh,1,'first'); % find the moment when the mouse actually STOPS
+    [~, tInd] = find(spd_smoothed(tRange)<=stopThresh,1,'first'); % find the moment when the mouse actually STOPS
     stopTimes(eii) = bc(tRange(tInd)); 
     stillLog(tRange) = true;
 end

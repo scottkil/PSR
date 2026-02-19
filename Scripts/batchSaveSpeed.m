@@ -1,0 +1,20 @@
+clear all; close all; clc
+recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv','Delimiter',',');
+
+%%
+smoothWin = .5; % speed smoothing window (in seconds)
+origFS = 30000;
+binSize = 0.1; % rotary encoder bin size
+plotSpeedFlag = 0; % plot speed???
+moveThresh = 0;
+for ii = 1:size(recfin,1)
+    loopClock = tic;
+    xdir = recfin.Filepath_SharkShark_{ii};
+    fprintf('Working on %s...\n',xdir);
+    ffn = sprintf('%sanalogData.bin',xdir);
+    adata = psr_binLoadData(ffn,3, 30000); % load analog binary data from channel 3 and 30kHz
+    spd = psr_computeSpeed(adata.data,binSize,origFS,smoothWin,moveThresh,plotSpeedFlag);
+    saveName = sprintf('%sspeed.mat',xdir);
+    save(saveName,'spd','-v7.3');
+    close(gcf);
+end

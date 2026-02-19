@@ -1,8 +1,8 @@
-function psr_eyeImagesToMat
+function psr_eyeImagesToMat(pathToPupilDir)
 %% psr_eyeImagesToMat Reads in eye images and saves to 3D Matlab matrix
 %
 % INPUTS:
-%   None - user selects directory containing eye images
+%   pathToPupilDir - directory containing eye images
 %
 % OUTPUTS:
 %   None, but saves 'eyeIM' Matlab variable to the selected directory
@@ -12,7 +12,7 @@ function psr_eyeImagesToMat
 % % ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%
-dd = dir(uigetdir);
+dd = dir(pathToPupilDir);
 rmLog = strcmp({dd.name},'.') | strcmp({dd.name},'..');
 dd(rmLog) = [];
 topDir = dd(1).folder;

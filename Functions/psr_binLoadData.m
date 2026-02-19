@@ -13,7 +13,7 @@ function fd = psr_binLoadData(filename,dch,targetFS)
 %
 % OUTPUTS:
 %   fd - a structure with following fields related to the analog signal:
-%       data - actual values of data (in volts)
+%       data - actual values of data (in 16-bit integer unit)
 %       time - times corresponding to values in data field (in seconds)
 %       tartgetFS - target sampling frequency specified by user (in samples/second)
 %       finalFS - the sampling frequency ultimately used (in

@@ -1,0 +1,60 @@
+%%
+topdir = '/media/scott4X/PSR_Data_Ext/PSR_38_Day1/PSR_38_Day1_Rec2_250211_203755/';
+
+ffn = sprintf('%sanalogData.bin',topdir);
+eeg = psr_binLoadData(ffn,1, 30000); % load analog binary data from channel 1 and 30kHz
+load(fullfile(topdir,"speed.mat"),'spd');
+load(fullfile(topdir,"pupilData.mat"),'pupil');
+load(fullfile(topdir,'seizures_EEG.mat'),'seizures');
+
+sz = seizures;
+
+% --- Get only good seizures (type 1 and 2s) --- %
+goodLog = strcmp({sz.type},'1') | strcmp({sz.type},'2');
+sz(~goodLog) = [];
+
+% --- Loop through seizures and get the peri-seizure speed data --- %
+for zii = 1:numel(sz)
+    SEinds = [sz(zii).trTimeInds(1), sz(zii).trTimeInds(end)];
+    SEtimes(zii,:) = sz(zii).time(SEinds)'; % starts and ends of seizures
+end
+
+%% --- Plotting below --- %
+EEGylim = [-7500 2000]; 
+speedYlim = [0 10]
+yp = [EEGylim(1),EEGylim(1), EEGylim(2),EEGylim(2)]; % y-points for shading patches
+scyp = [spd.stillTimes(:,1), spd.stillTimes(:,1), spd.stillTimes(:,2), spd.stillTimes(:,2)];
+xline(spd.stillTimes(:,1),'r--','LineWidth',1.5); % vertical lines at movement offset times
+xline(spd.stillTimes(:,2),'g--','LineWidth',1.5); % vertical lines at movement onset times
+
+
+figure;
+dsFactor = 15;
+dsIDX = 1:dsFactor:numel(eeg.time);
+
+sax(1) = subplot(411);
+hold on
+for zii = 1:size(SEtimes,1)
+    xp = [SEtimes(zii,1), SEtimes(zii,2), SEtimes(zii,2), SEtimes(zii,1)]; % x-points for shading patches
+    patch(xp,yp,'c','EdgeColor','none','FaceAlpha',0.25);
+end
+plot(eeg.time(dsIDX),eeg.data(dsIDX),'k','LineWidth',2);
+hold off
+ylim(EEGylim);
+
+sax(2) = subplot(412);
+plot(spd.time,spd.smoothed,'k','LineWidth',2);
+[~,tIDX] = ismember(spd.stopTimes,spd.time);
+hold on
+for zii = 1:size(SEtimes,1)
+    xp = [SEtimes(zii,1), SEtimes(zii,2), SEtimes(zii,2), SEtimes(zii,1)]; % x-points for shading patches
+    patch(xp,yp,'c','EdgeColor','none','FaceAlpha',0.25);
+end
+
+hold off
+sax(3) = subplot(413);
+plot(pupil.ft,pupil.diam,'k','LineWidth',2);
+sax(4) = subplot(414);
+plot(pupil.ft,pupil.mov,'k','LineWidth',2);
+linkaxes(sax,'x');
+xlim([3410 3446]);

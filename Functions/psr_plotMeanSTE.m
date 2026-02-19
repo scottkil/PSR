@@ -12,7 +12,7 @@ function psr_plotMeanSTE(ax,xd,yd,stOption)
 %
 % Written by Scott Kilianski
 % Updated on 2023-11-09
-% % ------------------------------------------------------------ %
+% ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%
 if ~exist('stOption','var')
@@ -34,7 +34,7 @@ xp = [xd,fliplr(xd)];
 axes(ax);
 hold on
 patch(xp,yp,'k','FaceAlpha',0.15,'EdgeColor','none');
-plot(xd,ym,'k','linewidth',1);
+plot(xd,ym,'k','linewidth',2);
 hold off
 
 end % function end
