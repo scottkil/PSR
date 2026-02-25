@@ -1,0 +1,153 @@
+%%
+clear all; close all; clc
+pfFile = '/home/scott/Documents/DepthPETHs.pdf';
+
+%
+dtbl = readtable('/home/scott/Documents/PSR/Data/AllCellsTable.csv',...
+    'Delimiter',',');
+recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
+    'Delimiter',',');       % read in recording info data
+load('/home/scott/Documents/PSR/Dependencies/UCLA_256F.mat','ycoords');
+
+simpName = dtbl.SimpleName; % get the structure names
+cLayer = dtbl.CorticalLayer;
+probeChan = dtbl.ProbeChannel_; % probe channels (0-indexed "Intan mapping")
+uqrid = unique(dtbl.RecID); % find the
+
+twin = 0.2; % peri-trough time window (in seconds)
+
+bigCell = {}; % to store outputs
+for rii = 1:size(recfin,1)
+
+    recID = uqrid(rii);  % get the current iteration recording ID
+    fprintf("Working on Rec# %.1f\n",recID);
+    cLog = dtbl.RecID == recID; % find all neurons in the current recording
+    pChan = probeChan(cLog);
+    chDepth = ycoords(pChan+1); % +1 because probe channels are 0-indexed
+    CL = cLayer(cLog); % get the current cortical layers
+    sn = simpName(cLog);        % get the structure names for these neurons
+    tdir = recfin.Filepath_SharkShark_{rii}; % set the top-level directory for this recording
+    [spkPETH, binCen] = psr_PETH_units_swd(tdir,twin); % compute the PETHs around SWD spikes
+
+    % --- Assign brain structures appropriate sort order indices --- %
+    assignVec = psr_structAssign(sn);
+    ccIDX = [1:size(spkPETH,1)]';  % initial neuron index
+    [av_sorted, avIDX] = sort(assignVec); % assign structure names the appropriate sorted order
+    sn = sn(avIDX); % sort the simple structure names accordingly
+    CL = CL(avIDX); % sort the cortical layers accordingly
+    chDepth = chDepth(avIDX); % sort probe channels accordingly
+    ccIDX = ccIDX(avIDX);
+
+    uA = unique(assignVec);  % find unique structures
+    sortedDepths = [];
+    sortedSN = [];
+    sortedLayers = [];
+    sortedNidx = []; % sorted neuron index list
+
+    for uii = 1:numel(uA)% structure FOR loop
+        % --- Get entries only in current structure --- %
+        currLog = av_sorted==uA(uii);
+        currLayers = CL(currLog);
+        currSN = sn(currLog);
+        currDepths = chDepth(currLog);
+        currnIDX = ccIDX(currLog);
+
+        % --- Apply Layer-wise sorting --- %
+        [currLayers, clsIDX] = sort(currLayers);
+        currSN = currSN(clsIDX);
+        currDepths = currDepths(clsIDX);
+        currnIDX = currnIDX(clsIDX);
+
+        for lii = [2,4,5,6,0]% layer FOR loop (sort by depth)
+            % --- Get entries only in current layer --- %
+            fLog = currLayers == lii; % final indexing logical
+            if isempty(fLog)
+                continue
+            end
+            subLayer = currLayers(fLog);
+            subSN = currSN(fLog);
+            subDepths = currDepths(fLog);
+            subnIDX = currnIDX(fLog);
+
+            % --- Apply depth sorting --- %
+            [subDepths, dsIDX] = sort(subDepths,'descend');
+            subSN = subSN(dsIDX);
+
+            sortedDepths = [sortedDepths; subDepths];
+            sortedSN = [sortedSN; subSN(dsIDX)];
+            sortedLayers = [sortedLayers; subLayer(dsIDX)];
+            sortedNidx = [sortedNidx; subnIDX(dsIDX)];
+        end
+    end
+
+    %%
+    spkPETH_sorted = spkPETH(sortedNidx,:,:);
+
+    %
+    numN = size(spkPETH_sorted,1);
+    PF = figure;
+    subplot(121);
+    imagesc(binCen*1000, 1:numN, mean(spkPETH_sorted,3,'omitmissing'));
+    colormap(flipud(gray))
+    colorbar
+    yticks(1:numN);
+    yticklabels(sortedLayers);
+    hold on
+    xline(0,'r--','LineWidth',1)
+    hold off
+    xlabel('Time from SWD Trough (ms)');
+    ylabel('Layer')
+    title(sprintf('PETHs by Depth  -  Rec# %.1f',recID))
+
+    %%
+    subplot(122);
+    uL = unique(sortedLayers);
+    RGB =[1.0000         0         0; ...
+        0.8000    1.0000         0; ...
+        0    1.0000    0.4000; ...
+        0    0.4000    1.0000; ...
+        0.8000         0    1.0000];
+    for lii = 1:numel(uL)
+        currLay = uL(lii);
+        switch currLay
+            case 0
+                clr = RGB(5,:);
+            case 2
+                clr = RGB(1,:);
+            case 4
+                clr = RGB(2,:);
+            case 5
+                clr = RGB(3,:);
+            case 6
+                clr = RGB(4,:);
+        end
+        layLog = sortedLayers == currLay;
+        cbr = sortedSN(layLog);
+        currBR = cbr(1);
+        meanPETH = mean(spkPETH_sorted(layLog, :, :), 3, 'omitmissing');
+        mmPETH = mean(meanPETH,1,'omitmissing');
+        cCOM = sum(binCen .* mmPETH) / sum(mmPETH); % center of mass
+        plot(binCen * 1000, mean(meanPETH,1,'omitmissing'),...
+            'Color',clr,'LineWidth',3);
+        hold on;
+
+        bigCell = [bigCell; {recID},currBR,{currLay},cCOM,sum(layLog)];
+
+    end
+    xline(0,'k--','LineWidth',1)
+
+    hold off;
+    xlabel('Time from SWD Trough (ms)');
+    ylabel('Mean PETH');
+    title('Mean PETH by Cortical Layer');
+    legend(num2str(uL))
+
+    drawnow;
+    exportgraphics(PF, pfFile,...
+        'Append', true);
+    close(PF);
+
+end
+
+pethCOMtable = cell2table(bigCell,'VariableNames',...
+    ["RecID","SimpleName","CorticalLayer","CenterOfMass","NumNeurons"]);

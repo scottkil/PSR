@@ -81,22 +81,23 @@ for bii = 1:size(pp.vals,1) % one loop iteration for each brain region
     % ----------- 3) Plotting ----------- %
     if plotFlag
         % ---- Plot cumulative distributions functions --- %
-        figure;
+        cf = figure;
         plot(xp,basecdf,'b','LineWidth',2);
         hold on
         plot(xp,SWDcdf,'r','LineWidth',2);
-        xline(ptCut,'g--');
+        xline(ptCut,'g--','LineWidth',2);
         text(.75,.25,sprintf('DD: %.3f',DD));
   
         hold off
         xlim([0 1]);
         ylim([0 1]);
+        set(cf().Children,'FontSize',14);
 
         % ---- Plot proportion population vectors --- %
-        figure; plot(pp.time,pp.vals(bii,:),'k');
+        figure; plot(pp.time,pp.vals(bii,:),'k','LineWidth',1);
         hold on; 
         % h = scatter(pp.time(LOCS),PKS,'bo'); % BE AWARE - doesn't always  display all points because of Matlab 'thinning' on display
-        yline(ptCut,'g--');
+        yline(ptCut,'r','LineWidth',3);
     end
     % ---------------------------------------------------------------- %
 

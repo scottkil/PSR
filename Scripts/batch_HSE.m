@@ -3,8 +3,8 @@ clear all; close all; clc
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
 
-twin = 0.025;  % window for HSEs
-dt = 0.005;    % time step for moving sum
+twin = 0.025;  % window for HSEs (seconds)
+dt = 0.005;    % time step for moving sum (seconds)
 bigHSE = [];  % Initialize bigHSE if not already done
 RN = []; % initialize recording number vector to store recording number ID
 for rii = 1:size(recfin,1)

@@ -32,7 +32,7 @@ ksdir = fullfile(topdir,'kilosort4/');          % kilosort output directory
 sa = psr_makeSpikeArray(ksdir);                 % spike time cell array
 
 % --- Make the PETH base window --- %
-dt_bin = 0.002;                      % time step for bin vector (0.002 = 2ms)
+dt_bin = 0.001;                      % time step for bin vector (0.002 = 2ms)
 halfwin = twin/2;                    % half window indices
 binEdges = -halfwin:dt_bin:halfwin;  % full window indices
 binCen = binEdges(2:end) - dt_bin/2; % window values in seconds units

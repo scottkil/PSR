@@ -44,16 +44,23 @@ for ni = 1:size(szCounts{1},1)
     normVec = sumVec./max(sumVec);
     axes(pax);
     polarplot(av,normVec);
+    % meanVec = ; %
 
     % -- Plotting individual polar plots -- %
-    % if ni <= 10 % plot the first 6 neurons
+    if ni <= 10 % plot the first 10 neurons
         fa(ni) = figure('Visible','on'); 
+        if  all(isnan(normVec)) % if there are no spikes during seizures, pass
+            continue
+        end
         cph = polarhistogram('BinEdges',ave,'BinCounts',normVec);
         title(sprintf('Neuron %d',ni));
         set(gcf().Children,'FontSize',14)
-        set(gca,'GridAlpha',0.5,'GridColor',[0 0 0])
-        set(cph,'FaceAlpha',1,'FaceColor',[1 0.345 0],'EdgeAlpha',1,'EdgeColor',[1 0.345 0]);
-    % end
+        set(gca,'GridAlpha',0.75,'GridColor',[0 0 0])
+        barAlpha = 0.6;
+        set(cph,'FaceAlpha',barAlpha,'FaceColor',[0.36, 0.68, 0.89],...
+            'EdgeAlpha',barAlpha,'EdgeColor',[0.36, 0.68, 0.89],...
+            'LineStyle','none');
+    end
 
 end
 hold off

@@ -37,7 +37,6 @@ for ni = 1:size(szCounts{1},1)
     cmspkvec = sum(spkmat,2);    % cumulative spike count vector (collapsing/counting over SWD cycles)
     totspks = sum(cmspkvec(:));  % total number of spikes in that vector
     norm_sm = cmspkvec./totspks; % normalized spike count vector
-    pSWD{}
 
     % -- Compute Mean Vector Length and Angle (MVL and MVA) -- %
     complex_vector = cmspkvec .* exp(1i * phaseVec); % compute complex vector (cumulative spike count x phase)
