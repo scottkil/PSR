@@ -1,12 +1,21 @@
-function stateFR = psr_FRs_SSM(topdir)
-%% === Get firing rates during motion, stillness, and seizure === %%
-% 2) Count spikes in those times
-% 3) Divide by total durations of those 3 categories
-topdir = '/media/scott2X/PSR_Data/PSR_07/PSR_07_Rec2_230915_135414/'; % set top-level directory
+function [stateFR, MUA_FR] = psr_FRs_SSM(topdir)
+%% psr_FRs_SSM Gets firing rates during SWD, stillness, and motion
+%  
+% INPUTS:
+%   topdir - filepath to top-level directory
+%
+% OUTPUTS:
+%   stateFR - firing rates (spikes/sec) during SWD (Col1), stillness (Col2), and movement (Col3)
+%   MUA_FR - same as stateFR but for MUA (normalized by number of neurons)
+%
+% Written by Scott Kilianski
+% Updated on 2026-02-25
+% ------------------------------------------------------------ %
+%% ---- Function Body Here ---- %%
+FS = 30000; % original sampling frequency (almost always 30kHz)
 load(fullfile(topdir,'speed.mat'),'spd'); % load in speed data
 seizFile = fullfile(topdir,'seizures_EEG.mat');       % filepath to seizure data
 load(seizFile,'seizures');    % load in seizure data
-FS = 30000; % original sampling frequency (almost always 30kHz)
 keepLog = strcmp({seizures.type},'1') | strcmp({seizures.type},'2'); % find type 1s and 2s
 seizures(~keepLog) = []; % remove bad "seizures"
 
@@ -39,11 +48,17 @@ swdTS = TS(swdVec);
 stillTS = TS(~swdVec & stillnessVec);
 moveTS = TS(~swdVec & ~stillnessVec);
 SecInState = [numel(swdTS), numel(stillTS), numel(moveTS)] ./FS; %total number of seconds in each state
-%%
-[spikeArray, neuronChans, clustIDs] = psr_makeSpikeArray_TS(fullfile(topdir,'/kilosort4/'));
+
+[spikeArray] = psr_makeSpikeArray_TS(fullfile(topdir,'/kilosort4/'));
 
 for nii = 1:numel(spikeArray)
     cSpikes = spikeArray{nii};
     SS = [sum(ismember(cSpikes,swdTS)), sum(ismember(cSpikes,stillTS)), sum(ismember(cSpikes,moveTS))];
     stateFR(nii,:) = SS ./ SecInState;
 end
+
+MUA_mat = cell2mat(spikeArray); % combine spike vectors of all neurons
+MUA_spikes = [sum(ismember(MUA_mat,swdTS)), sum(ismember(MUA_mat,stillTS)), sum(ismember(MUA_mat,moveTS))]; % find during what states they occur
+MUA_FR = MUA_spikes ./ (SecInState*numel(spikeArray)); % normalized by time and number of total neurons
+
+end % function end

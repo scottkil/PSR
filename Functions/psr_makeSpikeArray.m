@@ -1,4 +1,4 @@
-function [spikeArray, neuronChans, clustIDs] = psr_makeSpikeArray_TS(xdir)
+function [spikeArray, neuronChans, clustIDs] = psr_makeSpikeArray(xdir)
 %psr_makeSpikeArray_TS Returns all spike times (in timestamps units), along with other information, from a data directory
 %
 % INPUTS:
