@@ -25,7 +25,7 @@ for dd = 1
     seizFile = fullfile(seizFile.folder, seizFile.name);
 
     % -- LOAD IN SPIKES  -- %
-    spikeArray = psr_makeSpikeArray(dataDir);
+    spikeArray = psr_makeSpikeArray(fullfile(dataDir,'/kilosort4/'));
 
     % -- LOAD IN SEIZURES  -- %
     load(seizFile,'seizures');

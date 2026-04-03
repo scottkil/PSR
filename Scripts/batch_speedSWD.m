@@ -20,22 +20,34 @@ for rii = 1:size(recfin,1)
 end
 
 %%
-YL = [0 1.8];
+YL = [0 5];
 cf = figure;
 sax(1) = subplot(121);
-psr_plotMeanSTE(sax(1),sSWD.timeAX,start_speed,'std');
+% psr_plotMeanSTE(sax(1),sSWD.timeAX,start_speed,'std');
 hold on
+for rii = 1:size(start_speed,1)
+    plot(sSWD.timeAX,start_speed(rii,:),'Color',[0 0 0 0.2], 'LineWidth',1.5);
+end
+plot(sSWD.timeAX,mean(start_speed,1),'Color',[1 0.243 0], 'LineWidth',4)
+
 xline(0,'k--','LineWidth',2);
+
+% --- End plot --- %
 sax(2) = subplot(122);
-psr_plotMeanSTE(sax(2),sSWD.timeAX,end_speed,'std');
+% psr_plotMeanSTE(sax(2),sSWD.timeAX,end_speed,'std');
 hold on
+for rii = 1:size(end_speed,1)
+    plot(sSWD.timeAX,end_speed(rii,:),'Color',[0 0 0 0.2], 'LineWidth',1.5);
+end
+plot(sSWD.timeAX,mean(end_speed,1),'Color',[1 0.243 0],'LineWidth',4);
 xline(0,'k--','LineWidth',2);
 linkaxes(sax,'y');
 sax(1).YLim = YL;
-set(cf().Children,'FontSize',16);
-sax(1).XLabel.String = ('Time from SWD Onset (s)');
+set(cf().Children,'FontSize',18);
+sax(1).XLabel.String = ('Time from SWD Start (s)');
 sax(2).XLabel.String = ('Time from SWD End (s)');
 sax(1).YLabel.String = ('Speed (cm/s)');
 sax(2).YLabel.String = ('Speed (cm/s)');
-sax(1).YTick = [0 0.5 1 1.5];
-sax(2).YTick = [0 0.5 1 1.5];
+% sax(1).YTick = [0 0.5 1 1.5];
+% sax(2).YTick = [0 0.5 1 1.5];
+set(sax(:),'Box','off')

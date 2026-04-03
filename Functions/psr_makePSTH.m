@@ -18,7 +18,7 @@ function [startPSTH, endPSTH, timeArray] = psr_makePSTH(seizQ,binSize,buff)
 % % ------------------------------------------------------------ %
 
 %% ---- Function Body Here ---- %%%
-nbins = (2*buff/binSize+1);
+nbins = (2*buff/binSize);
 startIDX = 1:nbins;                         % indices to start of all seizQ matrices
 timeArray = (startIDX-.5).*binSize-buff;    % approximate seizure-start-relative time (in seconds) of startPSTH bins
 

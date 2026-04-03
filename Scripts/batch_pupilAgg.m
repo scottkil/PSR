@@ -1,5 +1,5 @@
 %%
-clear all; %close all; clc
+% clear all; %close all; clc
 d = {'/media/scott2X/PSR_Data/PSR_17/PSR_17_Rec2_231012_124907/';
     '/media/scott2X/PSR_Data/PSR_17_Day2/PSR_17_Rec2_231013_180431/';
     '/media/scott2X/PSR_Data/PSR_18/PSR_18_Rec2_231016_190216/';
@@ -28,7 +28,7 @@ start_diam = [];
 end_diam = [];
 start_mov = [];
 end_mov = [];
-zFlag = 0; % 1 for z-scoring, 0 for none
+zFlag = 1; % 1 for z-scoring, 0 for none
 
 nzSize = [];
 nzMov = [];
@@ -52,43 +52,61 @@ for ii = 1:numel(d)
 end
 
 %% === Pupil Diameter === %%
-% YL = [-0.9 0.3];
-YL = [0 50];
+YL = [-1.2 1];
+% YL = [0 50];
 cf = figure;
 sax(1) = subplot(121);
-psr_plotMeanSTE(sax(1),pSWD.timeAX,start_diam,'std');
+% psr_plotMeanSTE(sax(1),pSWD.timeAX,start_diam,'std');
 hold on
+for rii = 1:size(start_diam,1)
+    plot(pSWD.timeAX,start_diam(rii,:),'Color',[0 0 0 0.2], 'LineWidth',1.5);
+end
+plot(pSWD.timeAX,mean(start_diam,1),'Color',[1 0 1],'LineWidth',4);
 xline(0,'k--','LineWidth',2);
 sax(2) = subplot(122);
-psr_plotMeanSTE(sax(2),pSWD.timeAX,end_diam,'std');
+% psr_plotMeanSTE(sax(2),pSWD.timeAX,end_diam,'std');
 hold on
+for rii = 1:size(end_diam,1)
+    plot(pSWD.timeAX,end_diam(rii,:),'Color',[0 0 0 0.2], 'LineWidth',1.5);
+end
+plot(pSWD.timeAX,mean(end_diam,1),'Color',[1 0 1], 'LineWidth',4);
 xline(0,'k--','LineWidth',2);
 linkaxes(sax,'y');
 sax(1).YLim = YL;
-set(cf().Children,'FontSize',16);
-sax(1).XLabel.String = ('Time from SWD Onset (s)');
+set(cf().Children,'FontSize',18);
+sax(1).XLabel.String = ('Time from SWD Start (s)');
 sax(2).XLabel.String = ('Time from SWD End (s)');
 sax(1).YLabel.String = ('Pupil Diameter (s.d.)');
 sax(2).YLabel.String = ('Pupil Diameter (s.d.)');
-sax(1).YTick = [-.5 -.25 0];
-sax(2).YTick = [-.5 -.25 0];
+set(sax(:),'Box','off')
+% sax(1).YTick = [-.5 -.25 0];
+% sax(2).YTick = [-.5 -.25 0];
 
 %% === Pupil Movement === %%
 % YL = [-0.5 0.4]; % for z-scored values
-YL = [0 0.06];
+YL = [0 0.15];
 cf = figure;
 sax(1) = subplot(121);
-psr_plotMeanSTE(sax(1),pSWD.timeAX,start_mov*pixSize,'std');
+% psr_plotMeanSTE(sax(1),pSWD.timeAX,start_mov*pixSize,'std');
 hold on
+for rii = 1:size(end_diam,1)
+    plot(pSWD.timeAX,start_mov(rii,:)*pixSize,'Color',[0 0 0 0.2], 'LineWidth',1.5);
+end
+plot(pSWD.timeAX,mean(start_mov*pixSize,1),'Color',[0 0 1],'LineWidth',4);
 xline(0,'k--','LineWidth',2);
 sax(2) = subplot(122);
-psr_plotMeanSTE(sax(2),pSWD.timeAX,end_mov*pixSize,'std');
+% psr_plotMeanSTE(sax(2),pSWD.timeAX,end_mov*pixSize,'std');
 hold on
+for rii = 1:size(end_diam,1)
+    plot(pSWD.timeAX,end_mov(rii,:)*pixSize,'Color',[0 0 0 0.2], 'LineWidth',1.5);
+end
+plot(pSWD.timeAX,mean(end_mov*pixSize,1),'Color',[0 0 1], 'LineWidth',4);
 xline(0,'k--','LineWidth',2);
 linkaxes(sax,'y');
 sax(1).YLim = YL;
-set(cf().Children,'FontSize',16);
-sax(1).XLabel.String = ('Time from SWD Onset (s)');
+set(cf().Children,'FontSize',18);
+sax(1).XLabel.String = ('Time from SWD Start (s)');
 sax(2).XLabel.String = ('Time from SWD End (s)');
 sax(1).YLabel.String = ('Pupil Speed (mm/s)');
 sax(2).YLabel.String = ('Pupil Speed (mm/s)');
+set(sax(:),'Box','off')

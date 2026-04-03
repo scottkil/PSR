@@ -34,7 +34,7 @@ xp = [xd,fliplr(xd)];
 axes(ax);
 hold on
 patch(xp,yp,'k','FaceAlpha',0.15,'EdgeColor','none');
-plot(xd,ym,'k','linewidth',2);
+plot(xd,ym,'k','linewidth',3);
 hold off
 
 end % function end

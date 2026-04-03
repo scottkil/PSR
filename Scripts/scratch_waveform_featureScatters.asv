@@ -146,12 +146,8 @@ xlim([0 0.6])
 ylim([0 1.4])
 colormap(hot);
 
-% hold on
-% contour(xGrid, yGrid, diffP, [0 0], 'g', 'LineWidth', 4)
-
-% ax = gca;
-% ax.XColor = 'w';
-% ax.YColor = 'w';
+hold on
+contour(xGrid, yGrid, diffP, [0 0], 'g', 'LineWidth', 4)
 
 %%
 figure; 
@@ -161,6 +157,6 @@ bar(xi,f./sum(f),'EdgeColor','none',...
 xlim([0 0.6]);
 figure; 
 [f,xi] = ksdensity(yj,yrange);
-bar(xi,f./sum(f),'EdgeColor','none',...
+bar(xi,f,'EdgeColor','none',...
     'BarWidth',1, 'FaceColor','k');
 xlim([0 1.4]);

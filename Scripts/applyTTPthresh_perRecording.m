@@ -34,7 +34,7 @@ for rii = 1:size(recfin,1)
     bigHLFDUR = [bigHLFDUR; hlfdur'];
     inhbLog = ttp'<ttp_inhbThresh; %
     outName = sprintf('%sInhibitoryLog.mat',currDir);
-    save(outName,'inhbLog','-v7.3');
+    % save(outName,'inhbLog','-v7.3');
 end
 
 % --- Get the big log of inhibitory units --- %

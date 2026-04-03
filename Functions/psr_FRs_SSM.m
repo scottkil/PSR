@@ -1,4 +1,4 @@
-function [stateFR, MUA_FR] = psr_FRs_SSM(topdir)
+function [stateFR, MUA_FR] = psr_overallFRs(topdir)
 %% psr_FRs_SSM Gets firing rates during SWD, stillness, and motion
 %  
 % INPUTS:

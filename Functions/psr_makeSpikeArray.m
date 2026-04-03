@@ -13,6 +13,7 @@ function [spikeArray, neuronChans, clustIDs] = psr_makeSpikeArray(xdir)
 % Updated 2025-09-23
 %
 %% Function body
+FS = 30000; % sampling frequency
 origDir = cd;   % store starting directory path, so we can cd back to it at the end of this function
 cd(xdir);       % cd to the data directory 
 

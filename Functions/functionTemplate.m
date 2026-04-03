@@ -1,4 +1,4 @@
-function output1 = functionTemplate(input1)
+function output1 = functionTemplate(arg1)
 %% functionTemplate Template for functions 
 %
 % INPUTS:

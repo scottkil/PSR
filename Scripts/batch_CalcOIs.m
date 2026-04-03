@@ -1,0 +1,68 @@
+clear all; clc
+recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
+    'Delimiter',',');
+
+FS = 30000; % sampling frequency (Hz)
+twin = 0.025;  % window for calculating proportion active neurons ("propPop") (in seconds)
+dt = 0.005;    % time step for propPop (in seconds)
+
+bigC = {};
+for rii = 1:size(recfin,1)
+    recNumStr = sprintf('%d.%d',recfin.Subject_(rii),recfin.Recording_(rii));
+    recNum = str2num(recNumStr);
+    fprintf('%% ======= RECORDING %d.%d ======= %%\n',...
+        recfin.Subject_(rii),recfin.Recording_(rii));
+    topDir = recfin.Filepath_SharkShark_{rii};
+
+
+    % --- Handle timestamps --- %
+    tsFile = fullfile(topDir,'timestamps.bin');
+    tsFID = fopen(tsFile);
+    TS = fread(tsFID,Inf,'int32');
+    load(fullfile(topDir,'seizures_EEG.mat'),'seizures');
+    recSE = double([TS(1),TS(end)])./FS; % recording start and end (in seconds)
+    fclose(tsFID);
+
+    keepLog = strcmp({seizures.type},'1') | strcmp({seizures.type},'2'); % find type 1s and 2s
+    seizures(~keepLog) = []; % remove bad "seizures"
+
+
+    % --- Find seizures, get spikes, make Q matrices --- %
+    [sstend, ctrl_stend] = psr_findsstend(seizures,recSE); % get starts and ends of SWDs
+
+    pp = psr_propPop(topDir,twin,dt);
+
+    %
+    ac = psr_propPopAutoCcorr(pp,sstend,ctrl_stend); % find autocorrelations during seizures and control epochs
+
+    % --- Caulculate weighted mean autocorrelations --- %
+    weightMat = repmat(ac.weight_swd, [1 size(ac.swd,2)]);
+    for rii = 1:numel(pp.sn)
+        tmpMat = weightMat .* ac.swd(:,:,rii);
+        aCorr.swd(rii,:) = sum(tmpMat,1);
+    end
+
+    weightMat = repmat(ac.weight_ctrl, [1 size(ac.ctrl,2)]);
+    for rii = 1:numel(pp.sn)
+        tmpMat = weightMat .* ac.ctrl(:,:,rii);
+        aCorr.ctrl(rii,:) = sum(tmpMat,1);
+    end
+
+
+    lagwin = [0.005 0.250]; % seconds
+    swdOI = []; ctrlOI = [] ; % initialize storage vectors
+    for rii = 1:numel(pp.sn)
+        swdOI(rii,1) = psr_calcOI(aCorr.swd(rii,:),ac.lagT,lagwin);
+        ctrlOI(rii,1) = psr_calcOI(aCorr.ctrl(rii,:),ac.lagT,lagwin);
+    end
+    recNM = repmat(recNum,[numel(pp.sn),1]); 
+    bigC = [bigC; 
+        num2cell(recNM), ...
+        pp.sn', ...
+        num2cell(pp.nn), ...
+        num2cell(ctrlOI), ...
+        num2cell(swdOI)];
+end
+
+bigTable = cell2table(bigC,'VariableNames',{'Rec_Num',...
+    'Brain_Structure','Number_Neurons','Control_OI','SWD_OI'});
