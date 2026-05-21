@@ -24,7 +24,7 @@ function [sh, fullCom, figOut] = psr_ptSpikeCOMs_depthOrder(ptPETH,BC,shLog,smoo
 %   figOut - handle to output figure. [] if plotFlag is 0.
 %
 % Written by Scott Kilianski
-% Updated on 2026-04-24
+% Updated on 2026-05-21
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
 if nargin < 3
