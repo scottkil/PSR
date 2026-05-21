@@ -1,0 +1,80 @@
+function output1 = psr_mean_ptESAbyDepth(topdir, shankNum)
+%% psr_mean_ptESAbyDepth Finds the mean peri-trough ESA depth-ordered
+%
+% INPUTS:
+%   topdir - top-level data directory
+%   shankNum - shank number. 1 or 2 (1 is more lateral in these recordings)
+%   
+%
+% OUTPUTS:
+%   output1 - Description of output variable
+%
+% Written by Author
+% Updated on YYYY-MM-DD
+% ------------------------------------------------------------ %
+%% ---- Function Body Here ---- %%%
+shankNum = 1;
+ESA = psr_getESAvert(topdir,shankNum);
+zESA = zscore(ESA.mat,0,2);
+% ad = psr_binLoadData(fullfile(topdir,'analogData.bin'),1,3000);
+
+%%
+fullfile(topdir,'electrodeLocations.mat','electrodeLocations')
+elIDs = cell2mat(electrodeLocations(:,1));
+for chii = 1:numel(ESA.chIDs)
+     tmpName = electrodeLocations{elIDs==ESA.chIDs(chii),2};
+    if contains(tmpName,'layer 2')
+        newName = '2';
+    elseif contains(tmpName,'layer 4')
+        newName = '4';
+    elseif contains(tmpName,'layer 5')
+        newName = '5';
+    elseif contains (tmpName,'layer 6')
+        newName = '6';
+    elseif contains(tmpName,'corpus callosum')
+        newName = 'CC';
+    else 
+        newName = 'SubC';
+    end
+     ordBR{chii,1} = newName;
+end
+
+%%
+% figure;
+% sax(1) = subplot(5,1,1);
+% plot(ad.time,ad.data,'k');
+% 
+% sax(2) = subplot(5,1,2:5);
+% imagesc(ESA.time,1:size(zESA,1),zESA);
+% yticks(1:size(zESA,1))
+% yticklabels(ordBR);
+% colormap(flipud(gray))
+% clim([-5 10])
+% 
+% linkaxes(sax,'x');
+
+%%
+seizFile = fullfile(topdir,'seizures_EEG.mat');
+
+[TT, tID] = psr_getTroughTimes(seizFile);
+
+
+%%
+winSize = 0.150;
+halfWin = winSize/2;
+tstep = diff(ESA.time(1:2));
+halfWinSamples = halfWin/tstep;
+
+for ttii = 1:numel(TT)
+    [~,idx] = min(abs(TT(ttii) - ESA.time));             % find closest ESA time
+    TTsse = [(idx-halfWinSamples):(idx+halfWinSamples)]; % get peri-trough ESA
+    ptESAmat(:,:,ttii) = zESA(:,TTsse);
+end
+
+%%
+plotTime = (-halfWinSamples:halfWinSamples)*tstep;
+mpt = mean(ptESAmat,3); % mean peri-trough ESA matrix across all troughs
+figure; contourf(plotTime,1:size(ptESAmat,1),mpt,100,'LineStyle','none');
+set(gca,'YDir','reverse')
+yticks(1:size(zESA,1))
+yticklabels(ordBR);

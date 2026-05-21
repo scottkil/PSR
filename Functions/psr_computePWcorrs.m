@@ -1,8 +1,9 @@
-function [PWC] = psr_computePWcorrs(tdir,simpName)
+function [PWC] = psr_computePWcorrs(tdir,binSize,simpName)
 %% psr_computePWcorrs Calculates average pairwise correlations for nonSWD and SWD periods
 %
 % INPUTS:
 %   tdir - top-level directory for recording
+%   binSize - bin size for binning spikes (in seconds). Default is 0.1 secons
 %   simpName - (optional) cell array with names of brain region for each neuron
 %
 % OUTPUTS:
@@ -16,8 +17,10 @@ function [PWC] = psr_computePWcorrs(tdir,simpName)
 % Updated on 2025-09-29
 % ------------------------------------------------------------ %
 %% === Function Body Below === %
+if ~exist('binSize','var')
+    binSize = 0.1; % 0.1 seconds default
+end
 % --- User-controlled variables --- %
-binSize = 0.1;        % seconds
 buff = 0;             % no time buffer
 smoothTime = binSize; % no smoothing
 FS = 30000;           % sampling frequency
@@ -28,6 +31,8 @@ tsFID = fopen(tsFile);                     % open timestamps file
 TS = fread(tsFID,Inf,'int32');             % read in timestamps data
 load(fullfile(tdir,'seizures_EEG.mat'),... 
     'seizures');                           % load seizures
+goodLog = strcmp({seizures.type},'1') | strcmp({seizures.type},'2'); % logical for type 1 or 2 seizures only
+seizures(~goodLog) = [];               % remove none type-1 seizures
 recSE = double([TS(1),TS(end)])./FS;       % recording start and end (in seconds)
 fclose(tsFID);                             % close timestamps file
 
@@ -41,6 +46,10 @@ Q.ctrl = psr_makeSeizQ(spikeArray, ctrl_stend, binSize,buff,smoothTime); % non S
 % --- Make the seizure and control R matrices --- %
 R.swd = psr_computeRfromQ(Q.swd);    % compute R matrices for SWDs
 R.ctrl = psr_computeRfromQ(Q.ctrl);  % compute R matrices for control epochs
+
+% --- Remove any SWDs or control epochs that are too short to generate correlations (i.e. only 1 time bin) --- %
+R.swd(cellfun(@numel, R.swd)==1) = [];
+R.ctrl(cellfun(@numel, R.ctrl)==1) = [];
 
 % --- Assign each pair a brain structure - brain structure name --- %
 if exist("simpName",'var')

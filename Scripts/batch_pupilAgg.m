@@ -24,14 +24,17 @@ pixSize = 0.03143; % millimeters per pixel
 
 pupSize = []; % Col1 is nonSWD. Col2 is SWD
 pupMov = []; % Col1 is nonSWD. Col2 is SWD
+preSize = []; % Stores pre-SWD pupil diameter. Col1 is nonSWD. Col2 is SWD
+preMov = [];% Store pre-SWD pupil movement. Col1 is nonSWD. Col2 is SWD
 start_diam = [];
 end_diam = [];
 start_mov = [];
 end_mov = [];
-zFlag = 1; % 1 for z-scoring, 0 for none
+zFlag = 0; % 1 for z-scoring, 0 for none
 
 nzSize = [];
 nzMov = [];
+
 for ii = 1:numel(d)
     fprintf('%d out of %d...\n',ii,numel(d));
     try
@@ -46,6 +49,8 @@ for ii = 1:numel(d)
         nzSize = [nzSize;pSWD.nz.nonSWDsize,pSWD.nz.SWDsize];
         nzMov = [nzMov; pSWD.nz.nonSWDmov, pSWD.nz.SWDmov];
         st(ii) = true;
+        preSize = [preSize; mean(pSWD.preSWDdiam,'omitmissing')];
+    preMov = [preMov; mean(pSWD.preSWDmov,'omitmissing')];
     catch
         continue
     end

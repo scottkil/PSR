@@ -9,7 +9,7 @@ function pSWD = psr_pupilSWD(topDir,zFlag)
 %   pSWD - structure with relevant peri-SWD pupil data
 %
 % Written by Scott Kilianski
-% Updated on 2026-02-17
+% Updated on 2026-05-06
 % ------------------------------------------------------------ %
 %%
 szFile = sprintf('%sseizures_EEG.mat',topDir);
@@ -21,6 +21,7 @@ sz = seizures;
 goodLog = strcmp({sz.type},'1') | strcmp({sz.type},'2');
 sz(~goodLog) = [];
 TB = 10; % time buffer (seconds)
+preSWDwin = 2.5;  % pre-SWD window to look at speed (seconds)
 
 %%
 % --- Loop through seizures and get the peri-seizure pupil data --- %
@@ -44,6 +45,7 @@ if 1/xDT ~= 200
 end
 
 TBsz = TB/xDT; % timebuff in samples
+pswIDX = preSWDwin/xDT; % pre SWD window (in samples)
 tAX = (-TBsz:TBsz)*xDT; % corresponding time axis (in seconds)
 
 if zFlag
@@ -89,6 +91,11 @@ for zii = 1:size(SEtimes,1)
     
     csztIDX = pupil.ft > SEtimes(zii,1) & pupil.ft < SEtimes(zii,2);
     sztLog(csztIDX) = true; % mark pupil frame times within seizure periods
+
+    % --- grab pre-SWD diameter and movement --- %
+    preWin = (stIDX - pswIDX):stIDX; 
+    pSWD.preSWDdiam(zii,1) = mean(diam(preWin),'omitmissing');
+    pSWD.preSWDmov(zii,1) = mean(mov(preWin),'omitmissing');
 end
 pSWD.SWDsize = mean(zdiam(sztLog));
 pSWD.nonSWDsiz = mean(zdiam(~sztLog));

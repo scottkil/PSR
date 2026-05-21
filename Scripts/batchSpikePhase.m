@@ -3,7 +3,7 @@ clear all; close all; clc
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv','Delimiter',',');
 
 %%
-for ii = 1:size(recfin,1)
+for ii = 36:size(recfin,1)
     loopClock = tic;
     xdir = recfin.Filepath_SharkShark_{ii};
     fprintf('Working on %s...\n',xdir);

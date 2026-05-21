@@ -18,7 +18,7 @@ twin = 0.2; % peri-trough time window (in seconds)
 
 bigCell = {}; % to store outputs
 for rii = 1:size(recfin,1)
-
+%%
     recID = uqrid(rii);  % get the current iteration recording ID
     fprintf("Working on Rec# %.1f\n",recID);
     cLog = dtbl.RecID == recID; % find all neurons in the current recording
@@ -80,16 +80,22 @@ for rii = 1:size(recfin,1)
         end
     end
 
-    %%
+    %
     spkPETH_sorted = spkPETH(sortedNidx,:,:);
+    mPETH = mean(spkPETH_sorted,3,'omitmissing');
+    smoothWin = 10; 
+    smoothPETH = smoothdata(mPETH,2,"movmean",smoothWin,'omitmissing');
+    mdMat = repmat(max(smoothPETH,[],2),1,size(mPETH,2));
+    mPETHnorm = smoothPETH./mdMat;
 
     %
     numN = size(spkPETH_sorted,1);
     PF = figure;
     subplot(121);
-    imagesc(binCen*1000, 1:numN, mean(spkPETH_sorted,3,'omitmissing'));
-    colormap(flipud(gray))
-    colorbar
+    imagesc(binCen*1000, 1:numN, mPETHnorm);
+    % colormap(flipud(gray))
+    colormap(parula)
+    % colorbar
     yticks(1:numN);
     yticklabels(sortedLayers);
     hold on
@@ -99,7 +105,7 @@ for rii = 1:size(recfin,1)
     ylabel('Layer')
     title(sprintf('PETHs by Depth  -  Rec# %.1f',recID))
 
-    %%
+    %
     subplot(122);
     uL = unique(sortedLayers);
     RGB =[1.0000         0         0; ...
@@ -143,11 +149,28 @@ for rii = 1:size(recfin,1)
     legend(num2str(uL))
 
     drawnow;
-    exportgraphics(PF, pfFile,...
-        'Append', true);
-    close(PF);
-
+    % exportgraphics(PF, pfFile,...
+    %     'Append', true);
+    % close(PF);
+%%
 end
 
 pethCOMtable = cell2table(bigCell,'VariableNames',...
     ["RecID","SimpleName","CorticalLayer","CenterOfMass","NumNeurons"]);
+
+%%
+sub1 = pethCOMtable(strcmp(pethCOMtable.SimpleName,'Somatosensory'),:);
+
+urs = unique(sub1.RecID); % unique recordings list
+clList = [2,4,5,6]; % must have all layers (2/4/5/6)
+comMat = [];
+for rii = 1:numel(urs)
+    recLog = sub1.RecID==urs(rii);
+    subCL = sub1.CorticalLayer(recLog);
+    numMatches = sum(ismember(subCL,clList)); % number of matching cortical layers
+    if numMatches == length(clList) % must have all layers
+        comMat = [comMat; sub1.CenterOfMass(recLog)'];
+    end
+end
+
+% comMat: N x 4 matrix. N is number of recordings. columns are cortical layers (2/4/5/6). 

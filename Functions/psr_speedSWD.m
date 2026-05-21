@@ -8,11 +8,12 @@ function sSWD = psr_speedSWD(topDir)
 %   sSWD - structure with relevant peri-SWD speed data
 %
 % Written by Scott Kilianski
-% Updated on 2026-02-11
+% Updated on 2026-05-06
 % ------------------------------------------------------------ %
 %%
 % --- Load the speed data and seizures --- %
 TB = 10; % time buffer (seconds)
+preSWDwin = 2.5;  % pre-SWD window to look at speed (seconds)
 
 spdfname = 'speed.mat';
 speedFile = sprintf('%s%s',topDir,spdfname);
@@ -48,6 +49,7 @@ if 1/xDT ~= 200
 end
 
 TBsz = TB/xDT; % timebuff in samples
+pswIDX = preSWDwin/xDT; % pre SWD window (in samples)
 tAX = (-TBsz:TBsz)*xDT; % corresponding time axis (in seconds)
 
 rs_spd = interp1(spd.time,spd.smoothed,xq,'linear'); % resample speed at x-query points ("EEG time")
@@ -95,6 +97,9 @@ for zii = 1:size(SEtimes,1)
         stopDiffs = SEtimes(zii,1) - spd.stopTimes; % time interval between all stop times and current SWD start
         stopLatency(zii) = min(stopDiffs(stopDiffs>=0)); % latency between clostest stop time and SWD start
     end
+
+    preWin = (stIDX - pswIDX):stIDX; 
+    sSWD.preSpeed(zii,1) = mean(rs_spd(preWin),'omitmissing');
 end
 
 sSWD.SWDspeed = mean(spd.smoothed(sztLog));

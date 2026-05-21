@@ -1,0 +1,59 @@
+%% === Gets correlations and rank-order correlations between 1st and 2 half of SWD troughs per recording === %
+clear all; clc
+recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
+    'Delimiter',',');
+bigSeq = {};
+% pdfFile = '/home/scott/Documents/AllSequences.pdf';
+% pdfFile = '/home/scott/Documents/AllSequences_DepthOrdering_.pdf';
+dateString = datestr(now,'yyyymmdd_HHMMSS');
+pdfFile = ''
+% --- Main Loop --- %
+for rii = 1:size(recfin,1)
+    recNumStr = sprintf('%d.%d',recfin.Subject_(rii),recfin.Recording_(rii));
+    recNum = str2num(recNumStr);
+    fprintf('%% ======= RECORDING %d.%d ======= %%\n',...
+        recfin.Subject_(rii),recfin.Recording_(rii));
+    topdir = recfin.Filepath_SharkShark_{rii};
+    % [seqCell,sh, figOut] = psr_ptSequences(topdir,recNum);
+    [seqCell,sh, figOut] = psr_ptSequences_depthOrder(topdir,recNum);
+    bigSeq = [bigSeq; seqCell];
+
+    try
+        for fii = 1:numel(figOut)
+            exportgraphics(figOut(fii), pdfFile,...
+                'Append', true);
+        end
+    catch
+    end
+    close all;
+end
+
+%%
+% --- Create table --- %
+seqTable = cell2table(bigSeq,...
+    VariableNames=["RecNum",...
+    "BrainRegion",...
+    "NeuronCount",...
+    "PearsonR",...
+    "PearsonP",... 
+    "SpearmanR",...
+    "SpearmanP"]);
+
+%%
+minCount = 5; % number of neurons
+filtTable = seqTable(seqTable.NeuronCount >= minCount,:);
+ubrs = unique(filtTable.BrainRegion);
+ubrs = ubrs(~strcmp(ubrs,'Excluded'));
+for brii = 1:numel(ubrs)
+    brLog = strcmp(filtTable.BrainRegion,ubrs{brii});
+    totObs = sum(brLog); % total observations in this brain region
+    bfc = 0.05/totObs; % Bonferroni-corrected alpha value
+    sigLog = filtTable.SpearmanP(brLog) < bfc;
+    sigObs = sum(sigLog);
+    percSig{brii,1} = ubrs{brii}; % Store the brain region name
+    percSig{brii,2} = sigObs; % number of significant observations
+    percSig{brii,3} = totObs; % total number of observations
+    percSig{brii,4} = sigObs/totObs; % percentage of significant correlations
+    percSig{brii,5} = bfc; % Bonferonni-corrected alpha value for this brain region
+end
+

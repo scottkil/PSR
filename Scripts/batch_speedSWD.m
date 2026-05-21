@@ -4,7 +4,7 @@ recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
 
 %%
-
+ISL = []; % Immobility start log. 1 is SWD started during a period of immobility
 for rii = 1:size(recfin,1)
     loopClock = tic;
     fprintf('%% ======= RECORDING %d.%d ======= %%\n',...
@@ -17,9 +17,11 @@ for rii = 1:size(recfin,1)
     propStillStart(rii,1) = sum(sSWD.ss_start)/numel(sSWD.ss_start);
     propStillEnd(rii,1) = sum(sSWD.ss_end)/numel(sSWD.ss_end);
     meanSpeeds(rii,:) = [sSWD.nonSWDspeed,sSWD.SWDspeed];
+    preSpeeds(rii,1) = mean(sSWD.preSpeed,'omitmissing');
+    ISL = [ISL; sSWD.ss_start];
 end
 
-%%
+%% === Plotting below === %%
 YL = [0 5];
 cf = figure;
 sax(1) = subplot(121);

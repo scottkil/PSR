@@ -1,42 +1,62 @@
 %%
 clear all; close all; clc
-%%
 dtbl = readtable('/home/scott/Documents/PSR/Data/AllCellsTable.csv',...
     'Delimiter',',');
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
 simpName = dtbl.SimpleName; % get the structure names
 uqrid = unique(dtbl.RecID); % find the
-
+% bszList = [0.01:0.02:0.21]'; % 10ms to 
+bszList = 0.05; % 50ms bins
+minN = 10; % minimum number of unique neuron pairs
+pairList = {'Caudoputamen-Caudoputamen',...
+    'Frontal-Frontal',...
+    'Hipp-Hipp',...
+    'Somatosensory-Somatosensory',...
+    'Visual-Visual'};
+kList = [1;4;7;10;13];
 %%
-bigArray = {};
-for rii = 1:size(recfin,1)
 
-    % --- Set up for current iteration --- %
-    outCell = {}; % intialize the temporary output cell array
-    recID = uqrid(rii);  % get the current iteration recording ID
-    fprintf("Working on Rec# %.1f\n",recID);
-    cLog = dtbl.RecID == recID; % find all neurons in the current recording
-    sn = simpName(cLog);        % get the structure names for these neurons
-    tdir = recfin.Filepath_SharkShark_{rii}; % set the top-level directory for this recording
+for bii = 1:numel(bszList)
+    bigArray = {}; cMat = [];
+    for rii = 1:size(recfin,1)
+        binSize = bszList(bii);
+        % --- Set up for current iteration --- %
+        outCell = {}; % intialize the temporary output cell array
+        recID = uqrid(rii);  % get the current iteration recording ID
+        fprintf("Working on Rec# %.1f\n",recID);
+        cLog = dtbl.RecID == recID; % find all neurons in the current recording
+        sn = simpName(cLog);        % get the structure names for these neurons
+        tdir = recfin.Filepath_SharkShark_{rii}; % set the top-level directory for this recording
+
+        % --- Compute pairwise correlations and get averages across pairs --- %
+        PWC = psr_computePWcorrs(tdir,binSize,sn);  % get pairwise correlations
+        mpwc = psr_meanPWC(PWC);            % average across seizures and non-unique structure pairs
+
+        % --- Store data in cell array --- %
+        rrecid = repmat(recID,size(mpwc.names)); %
+        outCell(:,1) = num2cell(rrecid);    % Col1: RecID
+        outCell(:,2) = mpwc.names;          % Col2: Structure-Structure pair name
+        outCell(:,3) = num2cell(mpwc.np);   % Col3: Number of pairs
+        outCell(:,4) = num2cell(mpwc.ctrl); % Col4: Mean correlations during baseline
+        outCell(:,5) = num2cell(mpwc.swd);  % Col5: Mean correlations during SWD
+
+        bigArray = [bigArray;outCell]; % append current iteration data to bigArray
+    end
+
+    % --- Get group averages & effect sizes --- %
+    [upns,~,G] = unique(bigArray(:,2));
+
+    pwcTable = cell2table(bigArray,'VariableNames',{'RecID','RegionPair','PairCount','Baseline','SWD'});
     
-    % --- Compute pairwise correlations and get averages across pairs --- %
-    PWC = psr_computePWcorrs(tdir,sn);  % get pairwise correlations
-    mpwc = psr_meanPWC(PWC);            % average across seizures and non-unique structure pairs
-
-    % --- Store data in cell array --- %
-    rrecid = repmat(recID,size(mpwc.names)); %
-    outCell(:,1) = num2cell(rrecid);    % Col1: RecID
-    outCell(:,2) = mpwc.names;          % Col2: Structure-Structure pair name
-    outCell(:,3) = num2cell(mpwc.np);   % Col3: Number of pairs
-    outCell(:,4) = num2cell(mpwc.ctrl); % Col4: Mean correlations during baseline
-    outCell(:,5) = num2cell(mpwc.swd);  % Col5: Mean correlations during SWD
-
-    bigArray = [bigArray;outCell]; % append current iteration data to bigArray
-end
-
-%%
-[upns,~,G] = unique(bigArray(:,2));
-mc_baseline = cell2num(bigArray(:,4));
-mc_swd = cell2num(bigArray(:,5));
-% Y = splitapply(@)
+    for pii = 1:numel(pairList)
+        k = kList(pii);
+        pLog = strcmp(pwcTable.RegionPair,pairList{pii}) & pwcTable.PairCount>minN;
+        cData = pwcTable.SWD(pLog) - pwcTable.Baseline(pLog); % iteration-relevant data
+        ES(pii,bii) = mean(cData); % Effect Size estimate
+        cMat(1,k) =  mean(cData); % mean effect size
+        cMat(1,k+1) = std(cData); % standard deviation
+        cMat(1,k+2) = sum(pLog); % # of observations
+    end
+    anvMat(bii,:) = cMat; %  ANOVA matrix for implementation in Prism
+end % binSize loop

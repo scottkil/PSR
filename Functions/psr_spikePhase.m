@@ -16,10 +16,9 @@ function [szCounts, MUcounts] = psr_spikePhase(spikeArray,seizures)
 % Updated on 2024-05-14
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%%
-% sstend = psr_findsstend(seizures);
+nbins = 100; % phase bins
 funClock = tic;
 fprintf('Finding SW phase of all spikes...\n')
-nbins = 100; % phase bins
 for szi = 1:numel(seizures)
     sz = seizures(szi); % retrieve current seizure info
     cszs = [];          % intialize current seizure spike count matrix ( x time bins)

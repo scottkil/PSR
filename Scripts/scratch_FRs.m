@@ -1,4 +1,4 @@
-%% === Load mean vectors === %%
+%% ===  === %%
 clear all; close all; clc
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');
@@ -24,5 +24,5 @@ for ii = 1:size(recfin,1)
     % ------------------------------------ %
 
     elapsedTime = toc(loopClock);
-    fprintf('Completed in %.2f minutes.\n', elapsedTime/60);
+    fprintf('Completed in %.2f seconds.\n', elapsedTime);
 end

@@ -9,20 +9,26 @@ ubrs = unique(simpName);
 
 MVL = dtbl.MeanVectorLength_toFCXEEG_;
 MVA = dtbl.MeanVectorAngle_toFCXEEG_;
+% --- Circular shift of vector angles --- %
+MVAcirc = MVA;
+toShiftLog = MVAcirc > 180;
+MVAcirc(toShiftLog) = MVAcirc(toShiftLog) - 360; % Adjust angles greater than 180 degrees
 clc;
 
 %%
+alphaThresh = 10^-4;
 mv = {};
 for sii = 1:numel(ubrs)
-    cLog = strcmp(simpName,ubrs{sii});
+    cLog = strcmp(simpName,ubrs{sii}) & dtbl.MVL_pvals_FDR_adjusted<=alphaThresh;
     mv{sii,2} = MVL(cLog);
     mv{sii,3} = MVA(cLog);
     mv{sii,1} = ubrs{sii};
+    mvacirc{sii,1} = MVAcirc(cLog);
 end
 
 %% First attempt at plotting population histograms and mean vectors %%
 close all;
-npb = 50; % number of phase bins
+npb = 100; % number of phase bins
 colorList = psr_assignColors(ubrs);
 phaseVec = linspace(-pi,pi,npb)';   % make corresponding phase vector for 1 cycle (-π to π)
 ave = linspace(-pi,pi,npb+1); % angle vector (bin edges) for polar histogram
@@ -39,7 +45,7 @@ for sii = 1:numel(ubrs)
 
     complex_vector = vLens .* exp(1i * deg2rad(vAngs)); % product of vector lengths and angles
     mean_vector = sum(complex_vector,'omitnan'); % weighted average of all neurons' vectors (weighted based on vector lengths [i.e. neurons with strong phase-locking (high MVL) count more])
-    mvl(sii) = abs(mean_vector) / sum(vLens,'omitnan');                       % Normalized strength of phase locking (0 - none, 1 - max)
+    mvl(sii) = abs(mean_vector) / sum(~isnan(vLens));   % Normalized strength of phase locking (0 - none, 1 - max)
     mva(sii) = angle(mean_vector);
     mvadeg(sii) = rad2deg(mva(sii));                   % convert mean vector angle to degrees
 

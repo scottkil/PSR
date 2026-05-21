@@ -9,9 +9,10 @@ function ESA = psr_getESAvert(topdir,shanknum)
 %   ESA - structure with following fields:
 %          - mat: matrix with ESA data (# channels x time)
 %          - time: corresponding time vector (in seconds)
+%          - chIDs: channel ID numbers
 %
 % Written by Scott Kilianski
-% Updated on 2025-11-03
+% Updated on 2026-04-15
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%
 % === Read in data === %
@@ -43,5 +44,6 @@ ESA.time = fread(cfID,...
     inf,'double=>double');      % read the data
 fclose(cfID);                   % close the file
 
+ESA.chIDs = midVert; % channel IDs
 toc
 end % function end

@@ -1,0 +1,87 @@
+function CSD = psr_CSD(topdir)
+%% psr_ptSpikeCOMs Finds and plots center-of-mass (COM) for peri-trough spiking
+%
+% INPUTS:
+%   topdir - top-level directory
+%   recNum - recording ID number (e.g. 17.2). Used for gettting relevant per-cell information from AllCellsTable.csv
+%
+% OUTPUTS:
+%   seqCell - cell array with following organization:
+%       - Col1: Structure name
+%       - Col2: number of neurons on current shank
+%       - Col3: correlation of rank orders
+%     *Additional note: each structure has 2 rows. Top row corresponds to shank1. Bottom is shank 2
+%   sh - output from psr_ ptSpikeCOMs. Structure with shank-by-shank peri-trough data. Field ".one" and ".two" have the following subfields:
+%       com: center of mass times. Col1 is for first half. Col2 is for 2nd half
+%       ord: order of the c-o-m times. Col1 is for first half. Col2 is for 2nd
+%       mat: peri-trough time histogram matrix with dimensions:
+%         Dim1 - neurons
+%         Dim2 - time
+%         Dim3 - trough halves (1st and 2nd half)
+%
+% Written by Scott Kilianski
+% Updated on 2026-05-08
+% ------------------------------------------------------------ %
+%% ---- Function Body Here ---- %%%
+topdir = '/media/scott2X/PSR_Data/PSR_17/PSR_17_Rec2_231012_124907/';
+ufc = 100; % Upper cutoff frequency in Hz
+lfc = 2; % low cutoff frequency in Hz
+
+fprintf('Loading downsampled LFP data...\n')
+load(fullfile(topdir,'downsampled.mat'),'ds'); % load downsampled LFP data
+fs = ds.fs;
+tv = ((1:size(ds.data,2))-1)/fs; % time vector
+
+[b, a] = butter(4, [lfc,ufc] / (fs / 2), 'bandpass'); % 4th order bandpass Butterworth filter
+scaleFactor = ds.scaleFactor * 1e-6;   % factor used to convert amplifier_data unit to VOLTS (0.195 from Intan)
+shankName = {'Lateral Shank';...
+    'Medial Shank'};
+TT = psr_getTroughTimes(fullfile(topdir,'seizures_EEG.mat'));
+
+% -- s-golay CSD estimate --- %
+sgo = 2;              % quadratic local polynomial
+sgolayFrame = 9;      % 9 channels, spanning 300 µm at 50 µm spacing
+[~, g] = sgolay(sgo, sgolayFrame);
+halfWin = (sgolayFrame - 1) / 2; % sgolay convolution window
+
+smWin = 5;   % number of channels in Gaussian smoothing window
+ptWin = 0.1; % seconds
+ptHalfWin = ds.fs*ptWin/2;
+
+for sii = 1:2 % loop for each shank
+    load(sprintf('Shank%d_CSDchans.mat',sii),'ch');
+    dsData = ds.data(ch.idx,:); % current shank channel indices (vertically arranged and uniform spacing)
+    dz = ch.z; % delta z (microns)
+    fprintf('Filtering LFP data...\n')
+    FT = filtfilt(b,a,double(dsData)')'; % filtered traces
+    smTraces = smoothdata(FT, 1, 'gaussian', smWin); % vertically smoothed
+
+    % --- Perform the CSD via 3-point estimation with Savitzky-Golay filter --- %
+    d2V = conv2(smTraces, g(:,3), 'valid') * factorial(2) / dz^2;
+    wholeCSD = -d2V;
+
+    ptCSD = [];
+    for tii = 1:numel(TT)
+        % --- Find samples with closest time in CSD --- %
+        [~, cidx] = min(abs(tv - TT(tii))); % Find closest sample index to trough time
+        cwin = (cidx-ptHalfWin):(cidx+ptHalfWin);
+        ptCSD(:, :, tii) = wholeCSD(:,cwin);
+    end
+    meanCSD(:,:,sii) = mean(ptCSD,3);
+    chI_mod(:,sii) = ch.idx((1+halfWin):(end-halfWin));
+end
+% --- Output structure --- %
+CSD.meanCSD()
+CSD.chidx = chI_mod;
+CSD.time = (-ptHalfWin:ptHalfWin)/ds.fs; % time for CSD matrix (seconds)
+
+%%
+ptTime = (-ptHalfWin:ptHalfWin)/ds.fs;
+
+yd = 1:numel(chI_mod);
+
+figure;
+imagesc(ptTime, yd, meanCSD(:,:,2));
+yticks(yd)
+% yticklabels(electrodeLocations(chI_mod,2));
+colormap(jet)

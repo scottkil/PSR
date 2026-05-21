@@ -1,4 +1,4 @@
-%% Batch SWD, stillness, and motion FR calculations
+%% Batch overall FR values
 clear all; close all; clc
 recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv',...
     'Delimiter',',');       % read in recording info data
@@ -11,7 +11,7 @@ for rii = 1:size(recfin,1)
         recNum);
     topdir = recfin.Filepath_SharkShark_{rii};
     [FRs] = psr_overallFRs(topdir);
-    bigFR = [bigFR; FRs]; % append the MUA values to the matrix
+    bigFR = [bigFR; FRs]; % append the values to the matrix
 end
 
 %%

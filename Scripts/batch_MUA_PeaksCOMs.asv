@@ -1,0 +1,43 @@
+%% --- Retrieve layerwise peri-trough MUA  --- %
+clear all; close all; clc
+recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv','Delimiter',',');
+bigCOM = [];
+bigPK = [];
+for rii = 1:size(recfin,1)
+    topdir = recfin.Filepath_SharkShark_{rii};
+    try % if no electrode locations, can't load
+        NN = psr_getMidvertNames(topdir); % get brain regions and cortical layers for vertically ordered middle electrodes
+        if any(contains(NN,'Visual'),'all')
+            load(fullfile(topdir,'meanLayerPtMUA_200msWindow.mat'),'meanLayerPtMUA');
+            idx = 1:size(meanLayerPtMUA,2);
+            for sii = 1:2
+                pkInd = [];com = []; % intialize temporary peak and center-of-mass storage vectors
+                cm = meanLayerPtMUA(:,:,sii);
+                    cm2 = cm-repmat(min(cm,[],2),1,size(cm,2)); % subtracting minimum for more accurate center-of-mass estimate
+
+                if any(isnan(cm),'all')
+                    continue
+                else
+                    for clii = 1:size(cm2,1)
+                        % bigMUApt = cat(3,bigMUApt,cm);
+                        com(clii,1) = sum(idx .* cm2(clii,:)) / sum(cm2(clii,:)); % center-of-mass
+                        [~, pkInd(clii,1)] = max(cm2(clii,:));
+                    end
+                end
+                com = com * 
+                bigCOM = [bigCOM, com]; % accumulate center-of-mass values
+                bigPK = [bigPK, pkInd]; % accumulate peak indices
+            end
+        end
+    catch
+        fprintf('Skipping %s',topdir);
+    end
+end
+% figure;
+% for clii = 1:numel(CLL)
+% plot(xwin,meanLayerPtMUA(clii,:,2));
+% hold on
+% end
+%%
+% idx = 1:size(bigMUApt,2);
+% com = sum(idx .* v) / sum(v);

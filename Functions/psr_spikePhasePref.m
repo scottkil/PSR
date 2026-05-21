@@ -1,6 +1,5 @@
-function [mv, fa] = psr_spikePhasePref(szCounts,colorList)
+function [mv, cmspkc, fa] = psr_spikePhasePref(szCounts,colorList)
 %% psr_spikePhasePref  Calculates phase-locking metrics (vector length and angle) and makes polar plot showing phase of spiking
-%
 %
 % INPUTS:
 %   szCounts - cell array with binned spike matrices of all seizures (output from psr_spikePhase)
@@ -32,6 +31,7 @@ for ni = 1:size(szCounts{1},1)
     end
     spkmat = circshift(spkmat,round(ntb/2),1); % circularly shift the matrix for SWD negative peak (trough) is in the middle
     cmspkvec = sum(spkmat,2);    % cumulative spike count vector (collapsing/counting over SWD cycles)
+    cmspkc{ni} = cmspkvec;     % store this for output
     totspks = sum(cmspkvec(:));  % total number of spikes in that vector
     if ~totspks 
         norm_sm = zeros(ntb,1);      % if there are no spikes during SWD, make norm_sm zeros
@@ -41,7 +41,6 @@ for ni = 1:size(szCounts{1},1)
 
     % -- Compute Mean Vector Length and Angle (MVL and MVA) -- %
     complex_vector = cmspkvec .* exp(1i * phaseVec); % compute complex vector (cumulative spike count x phase)
-    % mvl = abs(mean(complex_vector));                 % take the absolute value of the mean to get MVL (mean vector length)
     mean_vector = sum(complex_vector) / totspks;     % normalized weighted mean
     mv.L(ni) = abs(mean_vector);                     % Normalized strength of phase locking  (0 - none, 1 - max)
     mv.totspks(ni) = totspks;                        % total number of spikes that go into phase analysis
@@ -70,8 +69,8 @@ for ni = 1:size(szCounts{1},1)
         'Color', 'k',...
         'FontSize',14);
 
-    strng2 = sprintf('%d total spikes', totspks);
-        annotation('textbox', [0.15, 0.58, 0.4, 0.25], ...  % [x y width height] in normalized units
+    strng2 = sprintf('%d total spikes in SWDs', totspks);
+        annotation('textbox', [0.10, 0.58, 0.4, 0.25], ...  % [x y width height] in normalized units
         'String', strng2, ...
         'EdgeColor', 'none', ...
         'Color', 'k',...

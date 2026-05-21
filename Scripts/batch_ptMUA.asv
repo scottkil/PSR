@@ -1,0 +1,76 @@
+clear all; close all; clc
+recfin = readtable('/home/scott/Documents/PSR/Data/RecordingInfo.csv','Delimiter',',');
+
+% --- User-controlled parameters --- %
+winsz = 0.1;
+halfwinsz = winsz/2;
+x_sw = 10;
+y_sw = 5;
+xint = 3; % x-upsample factor
+yint = 5; % y-upsample factor
+    ptMUAfigFile = '/home/scott/Documents/ptMUA_100msWindow.pdf';
+
+doneLog = false(size(recfin,1),1);
+for rii = 1:size(recfin,1)
+    try
+    topdir = recfin.Filepath_SharkShark_{rii};
+    fprintf('Working on %s...\n',topdir);
+    [meanPtMUA, xwin] = psr_makeMeanPtMUA(topdir,halfwinsz);
+
+    % --- Up sample peri-trough MUA matrices for plotting below --- %
+    xq = linspace(xwin(1),xwin(end),numel(xwin)*xint);
+    xwin_up = interp1(xwin,xwin,xq,'linear');
+    yd = 1:size(meanPtMUA,1);
+    ywin_up = yd(1):(yd(end)*yint);
+    Yticks = ywin_up(1:yint:ywin_up(end))';
+    mua1 = meanPtMUA(:,:,1);
+    mua2 = meanPtMUA(:,:,2);
+    outMat1 = psr_smoothMat(mua1,x_sw,y_sw,xint,yint);
+    outMat2 = psr_smoothMat(mua2,x_sw,y_sw,xint,yint);
+
+    % --- Smooth mean MUA matrices --- %
+    smMat = smoothdata(mua1,1,'gaussian',y_sw); % smooth vertically
+    finMat = []; % intiailize finMat
+    finMat(:,:,1) = smoothdata(smMat,2,'gaussian',x_sw); % smooth horizontally
+    smMat = smoothdata(mua2,1,'gaussian',y_sw); % smooth vertically
+    finMat(:,:,2) = smoothdata(smMat,2,'gaussian',x_sw); % smooth horizontally
+
+    NN = psr_getMidvertNames(topdir); % get brain regions and cortical layers for vertically ordered middle electrodes
+
+    % --- Plotting --- %
+    xt = -0.05:.025:0.05;
+    ptMUAfig = figure;
+    subplot(121);
+    imagesc(xwin_up,ywin_up,outMat1);
+    xticks(xt)
+    yticks(Yticks);
+    yticklabels(NN(:,1))
+    colormap(jet)
+    subplot(122);
+    imagesc(xwin_up,ywin_up,outMat2);
+    xticks(xt)
+    yticks(Yticks);
+    yticklabels(NN(:,2))
+    drawnow;
+    figName = fullfile(topdir,'MUAfig.fig');
+    tstr = sprintf('%d.%d',recfin.Subject_(rii),recfin.Recording_(rii)); % title string
+    title(tstr);
+    saveas(ptMUAfig,figName);
+        exportgraphics(ptMUAfig, ptMUAfigFile,...
+        'Append', true);
+
+    close(ptMUAfig);
+    % --- Find layer averages --- %
+    CLL = [2 4,5,6]; % cortical layers list
+    for sii = 1:2 % for shanks 1 and 2
+        for clii = 1:numel(CLL)
+            clLog = contains(NN(:,sii),sprintf('-%d',CLL(clii)));
+            meanLayerPtMUA(clii,:,sii) = mean(finMat(clLog,:,sii),1); % take the mean across the current cortical layer
+        end
+    end
+    outName = fullfile(topdir,'meanLayerPtMUA_100msWindow.mat');
+    % save(outName,'meanLayerPtMUA','-v7.3')
+    doneLog(rii) = true;
+    catch
+    end
+end % recording loop end

@@ -5,8 +5,8 @@ function [HSE, hf] = psr_findHSE(pp, SWDlabel,ptile,minTimeBtwnPeaks,plotFlag)
 %   pp - structure output from psr_propPop
 %   SWDlabel - logical vector the same length as pp.time indicating whether time point was during SWD or not
 %   ptile - percentile threshold value used for finding HSEs (proportion of 1). Default is 0.95 (95th percentile)
-%   minTimeBtwnPeaks - minimum time (in seconds) between peaks in pp.vals so peaks too close in time don't get double counted
-%   plotFlag - optional plotting flag. 1 for plots. 0 for no plots. Default is 1
+%   minTimeBtwnPeaks - minimum time (in seconds) between peaks in pp.vals so peak too close in time don't get double counted
+%   plotFlag - optional plotting flag. 1 for plots. 0 for no plots. Default is 0
 %
 % OUTPUTS:
 %   HSE - a structure with the following fields:
@@ -18,25 +18,26 @@ function [HSE, hf] = psr_findHSE(pp, SWDlabel,ptile,minTimeBtwnPeaks,plotFlag)
 %     - SWDcdf: SWD cumulative distribution
 %     - basecdf: baseline cumulative distribution 
 %     - xp: x-points for CDFs 
+%     - vals_SWD: values for all HSEs occuring during SWDs (0 to 1)
 %
 %   hf - structure to handles of figures from psr_estimatePPdist
 %       Dim1: brain region
 %       Dim2: baseline vs SWD
 %
 % Written by Scott Kilianski
-% Updated on 2025-11-05
+% Updated on 2025-05-08
 % ------------------------------------------------------------ %
 %% ---- Function Body Here ---- %%
 % --- Handle input arguments --- %
 if nargin < 3
     ptile = 0.95; % default percentile score
     minTimeBtwnPeaks = 0.025; % 25 milliseconds
-    plotFlag = 1;
+    plotFlag = 0;
 elseif nargin < 4
     minTimeBtwnPeaks = 0.025; % 25 milliseconds
-    plotFlag = 1;
+    plotFlag = 0;
 elseif nargin < 5
-    plotFlag = 1;
+    plotFlag = 0;
 end
 % ----------------------------- %
 
@@ -123,4 +124,5 @@ for bii = 1:size(pp.vals,1) % one loop iteration for each brain region
     HSE(bii).basecdf = basecdf; % baseline CDF
     HSE(bii).distX = xp; % x-points for CDFs
     HSE(bii).DD = DD; % distribution differences
+    HSE(bii).vals_SWD = pp.vals(bii,HSElog & SWDlabel);
 end
